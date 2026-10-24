@@ -1,0 +1,819 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Mauritius Property Scout</title>
+<meta name="theme-color" content="#0B6F6A">
+<meta name="referrer" content="no-referrer">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Property Scout">
+<script src="local-runtime.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a single scouting column — sticky tab bar, then one panel at a time (Matches · Searches · Settings · Activity). */
+:root{
+  --bg:#F3F7F6; --surface:#FFFFFF; --sunk:#E6EEEC; --line:#D2DEDB;
+  --ink:#0F2220; --muted:#557370; --accent:#0B6F6A; --accent-ink:#FFFFFF; --accent-soft:#D6EDEA;
+  --new:#C8402A; --new-soft:#FBE3DD; --ok:#2E7D32; --warn:#9A6B00;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", system-ui, -apple-system, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C1716; --surface:#13211F; --sunk:#0F1C1A; --line:#24403C; --ink:#E4F0EE; --muted:#8FAEAA;
+  --accent:#3FBDB4; --accent-ink:#04201E; --accent-soft:#163A37; --new:#FF7A5E; --new-soft:#3A1D17; --ok:#7CCF80; --warn:#E3B54A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C1716; --surface:#13211F; --sunk:#0F1C1A; --line:#24403C; --ink:#E4F0EE; --muted:#8FAEAA;
+  --accent:#3FBDB4; --accent-ink:#04201E; --accent-soft:#163A37; --new:#FF7A5E; --new-soft:#3A1D17; --ok:#7CCF80; --warn:#E3B54A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:880px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 16px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(1.6rem,5vw,2.2rem);line-height:1.05;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--display);font-weight:700;font-size:1.25rem;margin:0}
+h3{font-family:var(--display);font-weight:500;font-size:1rem;margin:0}
+.sub{color:var(--muted);margin:4px 0 0}
+.status{font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
+.dot.off{background:var(--muted)}
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:4px;margin:18px 0 16px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{font:inherit;font-weight:700;background:none;border:0;color:var(--muted);padding:10px 12px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+nav.tabs .count{font-family:var(--mono);font-size:11px;background:var(--new);color:#fff;border-radius:9px;padding:1px 6px;margin-left:4px}
+button,.btn{font:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:8px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:700;text-decoration:none}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:none;border-color:transparent;color:var(--muted);padding:6px 8px}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,nav.tabs button:focus-visible,.chip:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.spread{justify-content:space-between}
+.stack{display:grid;gap:12px}
+/* filter bar */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.filters select,.filters input{font:inherit;font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);min-width:0}
+.filters input{flex:1 1 160px}
+/* listing cards */
+.list{display:grid;gap:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:8px;min-width:0}
+.card.is-new{border-left:4px solid var(--new)}
+.card.dismissed{opacity:.55}
+.card .title{font-weight:700;font-size:1.02rem;color:var(--ink);text-decoration:none;overflow-wrap:anywhere}
+.card .title:hover{text-decoration:underline}
+.price{font-family:var(--mono);font-weight:600;font-size:1rem;white-space:nowrap}
+.meta{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--muted);font-size:13px}
+.meta b{color:var(--ink);font-weight:700}
+.pill{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:5px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.pill.new{background:var(--new-soft);color:var(--new)}
+.pill.src{background:var(--accent-soft);color:var(--accent)}
+.pill.saved{background:var(--accent);color:var(--accent-ink)}
+.contact{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;padding-top:8px;border-top:1px dashed var(--line)}
+.contact span{font-family:var(--mono);user-select:all;overflow-wrap:anywhere}
+.contact a{color:var(--accent);font-weight:700}
+.actions{display:flex;gap:4px;flex-wrap:wrap}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:var(--r);padding:28px 18px;text-align:center;color:var(--muted)}
+.empty h3{color:var(--ink);margin-bottom:6px}
+/* forms */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:16px}
+fieldset{border:0;padding:0;margin:0;display:grid;gap:8px;min-width:0}
+legend{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;padding:0}
+label.f{display:grid;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+input[type=text],input[type=email],input[type=number],select,textarea{font:inherit;font-size:15px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13.5px;cursor:pointer;background:var(--bg);user-select:none}
+.chip input{position:absolute;opacity:0;pointer-events:none}
+.chip:has(input:checked){background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.toggle{display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer}
+.toggle input{width:18px;height:18px;accent-color:var(--accent)}
+details.region{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--bg)}
+details.region summary{cursor:pointer;font-weight:700;font-size:14px;padding:4px 0}
+details.region .chips{padding:8px 0 4px}
+.searchcard{display:grid;gap:6px}
+.searchcard .summary{color:var(--muted);font-size:13.5px}
+.note{font-size:13px;color:var(--muted)}
+.mono{font-family:var(--mono);font-size:12.5px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:700;z-index:20}
+table.runs{width:100%;border-collapse:collapse;font-size:13px}
+table.runs th,table.runs td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.runs th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.tablewrap{overflow-x:auto}
+.srclist{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 14px}
+.fxbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);font-size:13.5px}
+.fxbar .rate{font-family:var(--mono);font-weight:600;font-size:15px;color:var(--accent)}
+.fxbar .muted{color:var(--muted)}
+.gbp{font-family:var(--mono);font-size:12.5px;color:var(--muted);white-space:nowrap}
+.allin{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;font-size:13px;background:var(--sunk);border-radius:8px;padding:6px 10px}
+.allin b{font-family:var(--mono)}
+table.cost{width:100%;border-collapse:collapse;font-size:14px}
+table.cost td,table.cost th{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+table.cost td:first-child,table.cost th:first-child{text-align:left}
+table.cost th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:400}
+table.cost td.n{font-family:var(--mono);font-size:13px;white-space:nowrap}
+table.cost tr.sub td{color:var(--muted);font-size:13px}
+table.cost tr.total td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0;font-size:15px}
+table.cost tr.extra td{color:var(--accent);font-weight:700}
+.bigtotal{display:grid;gap:2px;padding:14px;border-radius:var(--r);background:var(--accent);color:var(--accent-ink)}
+.bigtotal .l{font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.85}
+.bigtotal .v{font-family:var(--mono);font-size:1.5rem;font-weight:600}
+.bigtotal .s{font-family:var(--mono);font-size:13px;opacity:.9}
+.howto{display:grid;gap:6px;font-size:14px}
+.howto ol{margin:0;padding-left:20px;display:grid;gap:4px}
+.cardtop{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:start}
+.thumb{position:relative;width:96px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--sunk);padding:0;cursor:pointer;color:var(--muted);font-size:12px}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .nph{position:absolute;right:4px;bottom:4px;background:rgba(0,0,0,.6);color:#fff;font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:4px}
+.cardmain{display:grid;gap:4px;min-width:0}
+.pricebox{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline}
+.pricebox .fees{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--accent);white-space:normal;min-width:0}
+.pricebox .muted{color:var(--muted);font-weight:400}
+.pill.value{background:var(--ok);color:var(--bg)}
+.pill.good{background:var(--accent-soft);color:var(--ok)}
+.pill.high{background:var(--sunk);color:var(--warn)}
+.pill.above{background:var(--new-soft);color:var(--new)}
+.pill.warn{background:var(--new-soft);color:var(--warn)}
+.vstrip{display:flex;gap:10px;align-items:center;text-align:left;width:100%;background:var(--sunk);border:0;border-radius:8px;padding:6px 10px;color:var(--ink);font:inherit;font-size:13px;cursor:pointer;min-width:0}
+.vstrip.none{cursor:default;color:var(--muted)}
+.vstrip .mini{flex:0 0 auto;width:96px;height:auto}
+.vtext{min-width:0;line-height:1.5;overflow-wrap:anywhere}
+.summary{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--muted);margin:-4px 0 2px}
+.summary b{color:var(--ink)}
+.scorebox{display:grid;gap:4px;padding:14px;border-radius:var(--r);background:var(--sunk)}
+.scorebox .big{font-family:var(--display);font-weight:700;font-size:1.3rem}
+.sheet{position:fixed;inset:0;z-index:30;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.sheet header{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding-block:12px 6px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line)}
+.sheet header h2{font-size:1.05rem;overflow-wrap:anywhere}
+.sheet .stabs{display:flex;gap:2px;overflow-x:auto;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line)}
+.sheet .stabs button{font:inherit;font-weight:700;font-size:14px;background:none;border:0;color:var(--muted);padding:10px 10px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+.sheet .stabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.sheet .sbody{flex:1;overflow-y:auto;padding-block:14px 30px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet .sbody>div{max-width:820px;margin:0 auto;display:grid;gap:14px}
+.carousel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px;border-radius:var(--r)}
+.carousel img{flex:0 0 100%;width:100%;aspect-ratio:4/3;object-fit:cover;scroll-snap-align:center;border-radius:var(--r);background:var(--sunk)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.facts div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--muted)}
+.facts b{display:block;color:var(--ink);font-size:15px;font-family:var(--mono);font-weight:600}
+.mapwrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px}
+.mapwrap svg{width:100%;max-width:440px;height:auto;display:block;margin:0 auto}
+.agrow{display:grid;gap:2px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.agrow .nm{font-weight:700}
+.agrow a{color:var(--accent);overflow-wrap:anywhere}
+.upl{display:grid;gap:8px;padding:12px;border:1px dashed var(--accent);border-radius:var(--r);background:var(--surface)}
+.upl input[type=file]{font:inherit;font-size:14px;max-width:100%}
+.mythumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px}
+.mythumbs figure{margin:0;position:relative}
+.mythumbs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;display:block;background:var(--sunk)}
+.mythumbs button{position:absolute;top:4px;right:4px;border:0;border-radius:6px;background:rgba(0,0,0,.65);color:#fff;font-size:12px;padding:2px 7px}
+.domlist{display:flex;flex-wrap:wrap;gap:4px}
+.domlist span{font-family:var(--mono);font-size:12px;background:var(--sunk);border-radius:5px;padding:2px 6px;user-select:all}
+.domlist span.ok{background:var(--accent-soft);color:var(--ok)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Mauritius Property Scout</h1>
+      <p class="sub">Resale villas, apartments and land from the portals, independent agents, Instagram and TikTok. Checked every hour.</p>
+    </div>
+    <div class="status" id="status"><span class="dot off"></span><span>Connecting…</span></div>
+  </header>
+  <div class="fxbar" id="fxbar"><span class="rate">£1 = Rs …</span><span class="muted">Loading exchange rate…</span></div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-matches" aria-selected="true" data-tab="matches">Matches<span class="count" id="newCount" hidden>0</span></button>
+    <button role="tab" id="tab-searches" aria-selected="false" data-tab="searches">My searches</button>
+    <button role="tab" id="tab-costs" aria-selected="false" data-tab="costs">Costs</button>
+    <button role="tab" id="tab-settings" aria-selected="false" data-tab="settings">Settings</button>
+    <button role="tab" id="tab-activity" aria-selected="false" data-tab="activity">Activity</button>
+  </nav>
+
+  <!-- MATCHES -->
+  <section id="p-matches" class="stack">
+    <div class="filters">
+      <input type="text" id="q" placeholder="Filter by town, agent, keyword…" aria-label="Filter matches">
+      <select id="fType" aria-label="Type"><option value="">All types</option><option value="villa">Villa / House</option><option value="apartment">Apartment</option><option value="land">Land</option></select>
+      <select id="fStatus" aria-label="Status"><option value="active">New + seen</option><option value="new">New only</option><option value="saved">Saved</option><option value="dismissed">Dismissed</option><option value="all">Everything</option></select>
+      <select id="fSort" aria-label="Sort"><option value="posted">Newest posted</option><option value="postedOld">Oldest posted</option><option value="found">Newest found</option><option value="value">Most under market value</option><option value="saving">Biggest saving vs fair price</option><option value="priceAsc">Lowest price</option><option value="priceDesc">Highest price</option></select>
+      <select id="fValue" aria-label="Value"><option value="">Any value</option><option value="below">Below market value only</option><option value="good">Good value or better</option><option value="under">Under the average</option><option value="noabove">Hide above-market</option></select>
+      <select id="fPeriod" aria-label="Compare with"><option value="2026">Compare with 2026 adverts only</option><option value="2026u">2026 + undated adverts still on sale</option><option value="all">All adverts on sale now</option></select>
+    </div>
+    <div class="summary" id="valSummary"></div>
+    <div id="matchList" class="list"></div>
+  </section>
+
+  <!-- SEARCHES -->
+  <section id="p-searches" class="stack" hidden>
+    <div class="row spread"><h2>My searches</h2><button class="btn primary" id="newSearch">+ New search</button></div>
+    <p class="note">Each active search is run on every scan. Filters mirror lexpress.mu. Land sizes accept m² — Mauritian listings often quote perches (1 perche ≈ 42.2 m²) and arpents (1 arpent ≈ 4,221 m²); the agent converts.</p>
+    <div id="searchList" class="list"></div>
+    <div class="panel"><h2>Send these searches to the scanner</h2>
+      <p class="note">Changes you make here are saved on this device. The scanner on GitHub reads its own copy, so after changing searches, sources or the budget: tap <b>Download for the scanner</b>, then on your PC open your GitHub repository, choose <b>Add file → Upload files</b>, drop in <b>scanner-settings.json</b> and press <b>Commit changes</b>. The next hourly scan uses it.</p>
+      <div class="row"><button class="btn" type="button" id="exportScanner">Download for the scanner</button></div></div>
+    <form id="searchForm" class="panel" hidden autocomplete="off">
+      <div class="row spread"><h2 id="formTitle">New search</h2><button type="button" class="btn ghost" id="cancelForm">Cancel</button></div>
+      <label class="f">Name<input type="text" id="s_name" placeholder="e.g. North coast villa under Rs 25M" required></label>
+      <fieldset><legend>Property type</legend><div class="chips" id="s_types"></div></fieldset>
+      <fieldset><legend>Location</legend><div class="stack" id="s_regions" style="gap:6px"></div></fieldset>
+      <fieldset><legend>Budget</legend>
+        <div class="grid2">
+          <label class="f">Currency<select id="s_cur"><option>MUR</option><option>EUR</option><option>USD</option></select></label>
+          <label class="f">Min price<input type="number" id="s_pmin" min="0" step="any" inputmode="numeric"></label>
+          <label class="f">Max price<input type="number" id="s_pmax" min="0" step="any" inputmode="numeric"></label>
+        </div></fieldset>
+      <fieldset><legend>Size &amp; rooms</legend>
+        <div class="grid2">
+          <label class="f">Min bedrooms<select id="s_beds"><option value="">Any</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label class="f">Min bathrooms<select id="s_baths"><option value="">Any</option><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+          <label class="f">Min living area m²<input type="number" id="s_living" min="0" inputmode="numeric"></label>
+          <label class="f">Min land m²<input type="number" id="s_landmin" min="0" inputmode="numeric"></label>
+          <label class="f">Max land m²<input type="number" id="s_landmax" min="0" inputmode="numeric"></label>
+        </div></fieldset>
+      <fieldset><legend>Must have</legend>
+        <label class="toggle"><input type="checkbox" id="s_sea"> Sea view</label>
+        <label class="toggle"><input type="checkbox" id="s_pool"> Swimming pool</label>
+        <label class="f" style="max-width:320px">Age of property<select id="s_built"><option value="">Any age</option><option value="5">Built in the last 5 years</option><option value="10">Built in the last 10 years</option><option value="20">Built in the last 20 years</option><option value="30">Built in the last 30 years</option><option value="old30">Older than 30 years (character / renovation)</option></select></label>
+      </fieldset>
+      <fieldset><legend>Other features</legend><div class="chips" id="s_feats"></div></fieldset>
+      <fieldset><legend>Seller &amp; eligibility</legend>
+        <div class="grid2">
+          <label class="f">Seller<select id="s_seller"><option value="any">Agency or private</option><option value="agency">Agency only</option><option value="private">Private seller only</option></select></label>
+          <label class="f">Foreign buyers<select id="s_foreign"><option value="any">Doesn't matter</option><option value="eligible">Foreigner-eligible only (PDS / IRS / RES / G+2)</option><option value="local">Non-scheme (Mauritian) only</option></select></label>
+          <label class="f">Posted within<select id="s_age"><option value="">Any time</option><option value="1">24 hours</option><option value="3">3 days</option><option value="7">7 days</option><option value="30">30 days</option></select></label>
+        </div></fieldset>
+      <fieldset><legend>New builds</legend>
+        <label class="toggle"><input type="checkbox" id="s_new"> Include new builds</label>
+        <label class="toggle"><input type="checkbox" id="s_offplan"> Include off-plan (VEFA)</label>
+      </fieldset>
+      <fieldset><legend>Keywords</legend>
+        <div class="grid2">
+          <label class="f">Must mention<input type="text" id="s_kw" placeholder="e.g. pieds dans l'eau, vue mer"></label>
+          <label class="f">Exclude<input type="text" id="s_xkw" placeholder="e.g. viager, leasehold"></label>
+        </div></fieldset>
+      <label class="toggle"><input type="checkbox" id="s_active" checked> Active — run this search on every scan</label>
+      <div class="row"><button class="btn primary" type="submit" id="saveSearch">Save search</button><button type="button" class="btn" id="deleteSearch" hidden>Delete</button><span class="note" id="delConfirm" hidden>Tap Delete again to confirm.</span></div>
+    </form>
+  </section>
+
+  <!-- COSTS -->
+  <section id="p-costs" class="stack" hidden>
+    <div class="panel">
+      <h2>Total purchase cost</h2>
+      <div class="grid2">
+        <label class="f">Property price (Rs)<input type="number" id="c_mur" min="0" step="1000" inputmode="numeric" value="20000000"></label>
+        <label class="f">Property price (£)<input type="number" id="c_gbp" min="0" step="100" inputmode="numeric"></label>
+      </div>
+      <p class="note" id="c_from" hidden></p>
+      <div class="bigtotal"><span class="l">Total you pay, including fees</span><span class="v" id="c_total">Rs 0</span><span class="s" id="c_totalgbp">£0</span></div>
+      <div class="tablewrap"><table class="cost"><thead><tr><th>Item</th><th>Rate</th><th>Rs</th><th>£</th></tr></thead><tbody id="c_rows"></tbody></table></div>
+      <details><summary class="note" style="cursor:pointer">Change fee rates</summary>
+        <div class="grid2" style="padding-top:10px">
+          <label class="f">Agent fee %<input type="number" id="fee_agent" step="0.1" min="0" inputmode="decimal"></label>
+          <label class="f">VAT on agent fee %<input type="number" id="fee_agentvat" step="0.5" min="0" inputmode="decimal"></label>
+          <label class="f">Notary fee %<input type="number" id="fee_notary" step="0.1" min="0" inputmode="decimal"></label>
+          <label class="f">VAT on notary fee %<input type="number" id="fee_notaryvat" step="0.5" min="0" inputmode="decimal"></label>
+          <label class="f">Government fees %<input type="number" id="fee_gov" step="0.1" min="0" inputmode="decimal"></label>
+        </div>
+        <div class="row" style="padding-top:10px"><button type="button" class="btn" id="saveFees">Save as my default rates</button></div>
+      </details>
+    </div>
+    <div class="panel">
+      <h2>Pound ⇄ rupee converter</h2>
+      <div class="grid2">
+        <label class="f">Pounds (£)<input type="number" id="x_gbp" min="0" step="any" inputmode="decimal" value="1000"></label>
+        <label class="f">Rupees (Rs)<input type="number" id="x_mur" min="0" step="any" inputmode="decimal"></label>
+      </div>
+      <p class="note" id="x_note"></p>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="p-settings" class="stack" hidden>
+    <form id="budgetForm" class="panel" autocomplete="off">
+      <h2>Budget &amp; eligibility</h2>
+      <label class="f">Maximum price for all searches (Rs)<input type="number" id="b_max" min="0" step="100000" inputmode="numeric"></label>
+      <p class="note" id="b_gbp"></p>
+      <label class="toggle"><input type="checkbox" id="b_local" checked> Only properties Mauritians can buy (skip PDS / IRS / RES / Smart City / G+2 schemes sold to foreigners)</label>
+      <div class="row"><button class="btn primary" type="submit">Apply to all searches</button></div>
+      <p class="note">You can still give a single search its own budget under My searches.</p>
+    </form>
+    <form id="settingsForm" class="panel" autocomplete="off">
+      <h2>Alerts</h2>
+      <label class="f">Send match alerts to<input type="email" id="st_email" placeholder="you@example.com"></label>
+      <label class="toggle"><input type="checkbox" id="st_alerts" checked> Email me when a scan finds new matches</label>
+      <label class="toggle"><input type="checkbox" id="st_digest"> Also send a short "nothing new" note after quiet scans</label>
+      <p class="note">The scanner runs every hour. Alerts arrive as a push in the ntfy app on your iPhone and, if you set it up, as an email. Where they go is set in your GitHub repository (Settings → Secrets), not here.</p>
+      <h2>Sources</h2>
+      <p class="note">Untick a source to skip it. Add any agency website on its own line below.</p>
+      <div class="srclist" id="srcList"></div>
+      <label class="f">Extra agency websites (one per line)<textarea id="st_extra" rows="4" placeholder="https://www.example-agency.mu"></textarea></label>
+      <h2>Exchange rate</h2>
+      <p class="note">The scanner refreshes the pound-to-rupee rate (mid-market) on every scan. To use your bank's rate instead, enter it here; leave it blank to use the market rate.</p>
+      <label class="f">My own rate: £1 = Rs<input type="number" id="st_fx" min="0" step="0.01" inputmode="decimal" placeholder="Use market rate"></label>
+      <div class="row"><button class="btn primary" type="submit">Save settings</button></div>
+    </form>
+    <div class="panel" id="photoPanel">
+      <h2>Photos in the app</h2>
+      <p class="note">Photos load straight from each advert's website. A few sites don't allow that; for those, open the advert, or add your own photos from any match (Photos → Add photos). Photos you add are kept in this browser, on this device.</p>
+      <p class="note" id="phStatus" hidden></p><div class="domlist" id="phDomains" hidden></div>
+      <div class="row" hidden><button class="btn" type="button" id="phCopy">Copy list</button><button class="btn" type="button" id="phRetest">Test again</button></div>
+    </div>
+    <div class="panel">
+      <h2>Save to your phone</h2>
+      <p class="note">New matches arrive from the hourly scan on every device. Your own changes (shortlist, rejects, searches, settings, added photos) are kept in this browser on this device. To keep a copy or move them to another device, save a backup file and restore it there. On iPhone, choose <b>Save to Files</b> and pick OneDrive. On Android, choose the OneDrive folder or Downloads.</p>
+      <div class="row"><button class="btn" id="exportCsv" type="button">Matches as spreadsheet (.csv)</button><button class="btn" id="exportJson" type="button">Full backup (.json)</button></div>
+      <label class="f">Restore from a backup file<input type="file" id="importJson" accept=".json,application/json"></label>
+      <p class="note" id="exportNote"></p>
+    </div>
+    <div class="panel">
+      <div class="row spread"><h2>Agencies the scanner checks</h2><span class="pill src" id="agCount">0</span></div>
+      <p class="note" id="agSummary">Independent agents and classified sites found online. Each one's website was checked to see that it's live.</p>
+      <div class="filters" style="margin:0"><input type="text" id="agQ" placeholder="Search by name or town" aria-label="Search agencies"><select id="agR" aria-label="Region"><option value="">All regions</option><option>North</option><option>West</option><option>Centre</option><option>East</option><option>South</option></select><select id="agL" aria-label="Status"><option value="">Any status</option><option value="yes">Live</option><option value="likely">Probably live</option><option value="unverified">Not verified</option><option value="no">Offline</option></select></div>
+      <div id="agList"></div>
+    </div>
+    <div class="panel howto">
+      <h2>Add it to your home screen</h2>
+      <p class="note">This opens the scout like an app, with its own icon. No sign-in is needed.</p>
+      <b>iPhone (Safari)</b>
+      <ol><li>Open this page in Safari.</li><li>Tap Share, then <b>Add to Home Screen</b>.</li><li>Name it "Property Scout" and tap Add.</li></ol>
+      <b>Android (Chrome)</b>
+      <ol><li>Open this page in Chrome.</li><li>Tap the ⋮ menu, then <b>Add to Home screen</b>.</li><li>Name it "Property Scout" and tap Add.</li></ol>
+      <b>Windows PC (Edge or Chrome)</b>
+      <ol><li>Open this page in Edge or Chrome.</li><li>Edge: ⋯ menu → <b>Apps → Install this site as an app</b>. Chrome: ⋮ menu → <b>Cast, save and share → Install page as app</b>.</li><li>It then appears in the Start menu and can be pinned to the taskbar.</li></ol>
+    </div>
+  </section>
+
+  <!-- ACTIVITY -->
+  <section id="p-activity" class="stack" hidden>
+    <h2>Scan history</h2>
+    <div class="tablewrap"><table class="runs"><thead><tr><th>When</th><th>Checked</th><th>Found</th><th>New</th><th>Notes</th></tr></thead><tbody id="runRows"></tbody></table></div>
+    <p class="note" id="runEmpty">No scans yet. The first one runs within the hour after setup (or press Run workflow on GitHub); each one adds a line here.</p>
+    <h2>Which websites the scanner can read</h2>
+    <p class="note" id="srcStatusNote">Shown after the first scan.</p>
+    <div class="tablewrap"><table class="runs"><thead><tr><th>Website</th><th>Read</th><th>Refused</th><th>Failed</th><th>Last result</th></tr></thead><tbody id="srcStatusRows"></tbody></table></div>
+  </section>
+</div>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <header><div style="display:grid;gap:4px;min-width:0"><h2 id="sheetTitle">Listing</h2><div class="pricebox" id="sheetPrice"></div></div><button class="btn" id="sheetClose" type="button">Close</button></header>
+  <div class="stabs" role="tablist" id="sheetTabs">
+    <button data-st="photos" aria-selected="true">Photos</button><button data-st="desc" aria-selected="false">Description</button><button data-st="map" aria-selected="false">Map</button><button data-st="value" aria-selected="false">Value</button><button data-st="costs" aria-selected="false">Costs</button>
+  </div>
+  <div class="sbody" id="sheetBody"></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const TYPES=[["villa","Villa / House"],["townhouse","Townhouse / Duplex"],["bungalow","Bungalow / Campement"],["apartment","Apartment"],["penthouse","Penthouse"],["land_res","Residential land"],["land_agri","Agricultural land"],["land_com","Commercial land"]];
+const REGIONS={
+ "North":["Grand Baie","Pereybère","Trou aux Biches","Mont Choisy","Pointe aux Canonniers","Cap Malheureux","Calodyne","Grand Gaube","Goodlands","Pointe aux Piments","Balaclava","Triolet","Pamplemousses","Roches Noires"],
+ "West":["Flic en Flac","Tamarin","Black River","La Gaulette","Le Morne","Albion","Wolmar","Cascavelle","Bambous","Petite Rivière"],
+ "Centre":["Moka","Ebène","Quatre Bornes","Rose Hill","Beau Bassin","Vacoas","Phoenix","Curepipe","Floréal","Port Louis"],
+ "East":["Belle Mare","Trou d'Eau Douce","Poste de Flacq","Palmar","Beau Champ","Centre de Flacq"],
+ "South":["Mahébourg","Blue Bay","Pointe d'Esny","Bel Ombre","Souillac","Rivière des Anguilles","Chamarel"]};
+const FEATURES=["Beachfront / pieds dans l'eau","Garden","Garage / parking","Furnished","Air conditioning","Gated / secure complex","Mountain view","Near school","Golf nearby","Solar / generator"];
+const SOURCES=[
+ ["lexpress","L'Express: lexpressproperty.com (via search) + petites annonces","portal"],["propertymap","propertymap.mu","portal"],["propertycloud","propertycloud.mu","portal"],["expat","expat.com Mauritius","portal"],["lemauricien","Classifieds (lemauricien, defimedia, topannonces)","portal"],
+ ["agencies","Independent agency websites (50+)","agency"],["facebook","Facebook pages & public groups","social"],["instagram","Instagram","social"],["tiktok","TikTok","social"]];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let db=null, listings=[], searches=[], runs=[], settings=null, editingId=null, canWrite=true, assets=null, photoCfg=null;
+// photos shown in the app: ones you added (stored as asset ids) first, then ones the agent copied
+const pics=l=>[...(l.userPhotos||[]).map(id=>window.__blobUrl?window.__blobUrl(id):"/_blob/"+id).filter(Boolean),...(l.photos||[]),...(l.photoUrls||[])];
+
+function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2200)}
+function chip(name,val,label,checked){return `<label class="chip"><input type="checkbox" name="${name}" value="${esc(val)}" ${checked?"checked":""}>${esc(label)}</label>`}
+function checked(name){return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(i=>i.value)}
+
+// tabs
+document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
+function showTab(t){document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
+ ["matches","searches","costs","settings","activity"].forEach(p=>$("#p-"+p).hidden=p!==t);try{localStorage.setItem("tab",t)}catch(e){}}
+try{const t=localStorage.getItem("tab");if(t)showTab(t)}catch(e){}
+
+// ---------- matches ----------
+function typeGroup(t){t=(t||"").toLowerCase();if(t.includes("land"))return"land";if(t.includes("apart")||t.includes("penthouse"))return"apartment";return"villa"}
+function fmtPrice(l){if(l.priceText)return l.priceText;if(!l.price)return"Price on request";return (l.currency||"Rs")+" "+Number(l.price).toLocaleString("en-GB")}
+function ago(d){if(!d)return"";const t=new Date(d);if(isNaN(t))return d;const days=Math.floor((Date.now()-t)/864e5);if(days<=0)return"today";if(days===1)return"yesterday";if(days<30)return days+" days ago";return t.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}
+function fmtDate(d){if(!d)return"";const t=new Date(d);return isNaN(t)?d:t.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}
+function renderMatches(){
+ const q=$("#q").value.trim().toLowerCase(),ft=$("#fType").value,fs=$("#fStatus").value,so=$("#fSort").value;
+ let rows=listings.filter(l=>{const st=l.status||"new";
+  if(fs==="active"&&!(st==="new"||st==="seen"||st==="saved"))return false;
+  if(fs!=="active"&&fs!=="all"&&st!==fs)return false;
+  if(ft&&typeGroup(l.type)!==ft)return false;
+  const fv=$("#fValue").value;if(fv){const b=valueOf(l).band;
+   if(fv==="below"&&b!=="below")return false;if(fv==="good"&&!(b==="below"||b==="good"))return false;
+   if(fv==="under"&&!(valueOf(l).z!=null&&valueOf(l).z<0&&b!=="check"))return false;if(fv==="noabove"&&(b==="above"||b==="high"))return false}
+  if(q&&!JSON.stringify([l.title,l.location,l.agent,l.source,l.description]).toLowerCase().includes(q))return false;return true});
+ const tPost=l=>new Date(l.datePosted||l.firstSeen||0).getTime()||0;
+ const key={posted:l=>-tPost(l),postedOld:l=>l.datePosted?tPost(l):9e15,found:l=>-(new Date(l.firstSeen||0).getTime()||0),priceAsc:l=>toMur(l)||9e15,priceDesc:l=>-(toMur(l)||0),
+  value:l=>{const v=valueOf(l);return v.z==null||v.band==="check"?99:v.z},saving:l=>{const v=valueOf(l);return v.saving==null||v.band==="check"?9e15:-v.saving}}[so]||(l=>0);
+ rows.sort((a,b)=>key(a)-key(b));
+ const vs=rows.map(valueOf),cnt=b=>vs.filter(v=>v.band===b).length,nComp=comps.reduce((a,d)=>a+(d.entries||[]).filter(e=>periodOk(yearClass(e))).length,0);
+ $("#valSummary").innerHTML=`<span><b>${rows.length}</b> shown</span><span><b>${cnt("below")}</b> below market value</span><span><b>${cnt("good")}</b> good value</span><span><b>${vs.filter(v=>v.z==null).length}</b> not enough data</span><span>Comparing with 20–50 of ${nComp.toLocaleString("en-GB")} ${PERIOD_TEXT[cmpPeriod]} from all sites, same town first</span>`;
+ const nNew=listings.filter(l=>(l.status||"new")==="new").length;$("#newCount").textContent=nNew;$("#newCount").hidden=!nNew;
+ if(!rows.length){$("#matchList").innerHTML=listings.length?`<div class="empty"><h3>Nothing matches these filters</h3>Try "Everything" in the status filter.</div>`:
+  `<div class="empty"><h3>No matches yet</h3>The scanner adds listings here after each scan, newest first, with the link, date posted and the agent's WhatsApp, phone and email where it finds them. Set up what you're looking for under <b>My searches</b>.</div>`;return}
+ $("#matchList").innerHTML=rows.map(l=>{const st=l.status||"new";const wa=(l.whatsapp||"").replace(/[^\d]/g,"");
+  const facts=[l.beds&&`<b>${esc(l.beds)}</b> bed`,l.baths&&`<b>${esc(l.baths)}</b> bath`,l.livingM2&&`<b>${esc(l.livingM2)}</b> m² living`,l.landM2&&`<b>${esc(l.landM2)}</b> m² land`].filter(Boolean).join(" · ");
+  const m=toMur(l),v=valueOf(l),ph=pics(l)[0],nph=pics(l).length||(l.photoUrls||[]).length;
+  return `<article class="card ${st==="new"?"is-new":""} ${st==="dismissed"?"dismissed":""}" data-id="${esc(l._id)}">
+   <div class="cardtop">
+    <button class="thumb" data-detail="${esc(l._id)}" aria-label="Open details">${ph?`<img src="${esc(ph)}" alt="" loading="lazy">`:`<span>${esc(typeGroup(l.type)==="land"?"Land":"No photo")}</span>`}${nph>1?`<span class="nph">${nph} ph</span>`:""}</button>
+    <div class="cardmain">
+     <a class="title" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.title||"Listing")}</a>
+     <div class="pricebox"><span class="price">${esc(fmtPrice(l))}</span>${m?`<span class="gbp">≈ ${gbp(m)}</span><span class="fees">Incl. fees ${gbp(costs(m).total)} <span class="muted">(${rs(costs(m).total)})</span></span>`:""}</div>
+    </div>
+   </div>
+   ${valueStrip(l,v)}
+   <div class="row" style="gap:6px">${v.below?'<span class="pill value">✓ Below market value</span>':""}${st==="new"?'<span class="pill new">New</span>':""}${st==="saved"?'<span class="pill saved">Saved</span>':""}<span class="pill src">${esc(l.source||"web")}</span>${l.type?`<span class="pill">${esc(l.type)}</span>`:""}${l.isNewBuild?'<span class="pill">New build</span>':""}${l.searchName?`<span class="pill">${esc(l.searchName)}</span>`:""}</div>
+   <div class="meta">${l.location?`<span><b>${esc(l.location)}</b></span>`:""}${facts?`<span>${facts}</span>`:""}</div>
+   <div class="meta"><span>Posted <b>${l.datePosted?esc(fmtDate(l.datePosted))+" ("+ago(l.datePosted)+")":"date not shown"}</b></span><span>Found ${esc(ago(l.firstSeen))}</span>${l.ref?`<span class="mono">Ref ${esc(l.ref)}</span>`:""}</div>
+   ${l.description?`<div class="note">${esc(l.description)}</div>`:""}
+   ${(l.agent||l.phone||wa||l.email)?`<div class="contact">${l.agent?`<b>${esc(l.agent)}</b>`:""}${wa?`<a href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp ${esc(l.whatsapp)}</a>`:""}${l.phone?`<span>☎ ${esc(l.phone)}</span>`:""}${l.email?`<span>✉ ${esc(l.email)}</span>`:""}</div>`:""}
+   <div class="actions"><button class="btn" data-detail="${esc(l._id)}">Photos, map &amp; details</button><a class="btn ghost" href="${esc(l.url)}" target="_blank" rel="noopener">Open advert ↗</a></div>
+   <div class="actions">${st!=="saved"?`<button class="btn ghost" data-act="saved">Save</button>`:`<button class="btn ghost" data-act="seen">Unsave</button>`}${st==="new"?`<button class="btn ghost" data-act="seen">Mark seen</button>`:""}${st!=="dismissed"?`<button class="btn ghost" data-act="dismissed">Not for me</button>`:`<button class="btn ghost" data-act="seen">Restore</button>`}</div>
+  </article>`}).join("")}
+["#fType","#fStatus","#fSort","#fValue","#fPeriod"].forEach(s=>{try{const v=localStorage.getItem("f"+s);if(v!=null&&[...$(s).options].some(o=>o.value===v))$(s).value=v}catch(e){}});
+["#q","#fType","#fStatus","#fSort","#fValue","#fPeriod"].forEach(s=>$(s).addEventListener("input",()=>{try{localStorage.setItem("f"+s,$(s).value)}catch(e){}
+ if(s==="#fPeriod"){cmpPeriod=$("#fPeriod").value;valCache.clear();if(cur&&!$("#sheet").hidden&&curTab==="value")sheetTab("value")}renderMatches()}));
+$("#matchList").addEventListener("click",async e=>{const dv=e.target.closest("[data-detail-value]");
+ if(dv){openDetail(dv.dataset.detailValue,"value");return}
+ const dt=e.target.closest("[data-detail]");
+ if(dt){openDetail(dt.dataset.detail);return}
+ const b=e.target.closest("button[data-act]");if(!b||!db)return;const id=b.closest(".card").dataset.id;
+ b.disabled=true;try{await db.doc("listings/"+id).update({status:b.dataset.act,statusAt:new Date().toISOString()})}catch(err){toast("Couldn't update: "+(err.code||err.message))}b.disabled=false});
+
+// ---------- searches ----------
+function describe(s){const t=(s.types||[]).map(v=>(TYPES.find(x=>x[0]===v)||[,v])[1]).join(", ")||"Any type";
+ const loc=[...(s.regions||[]),...(s.towns||[])].join(", ")||"All Mauritius";
+ const p=(s.priceMin||s.priceMax)?`${s.currency||"MUR"} ${s.priceMin?Number(s.priceMin).toLocaleString("en-GB"):"0"}–${s.priceMax?Number(s.priceMax).toLocaleString("en-GB"):"any"}`:"Any price";
+ const size=[s.livingMin&&s.livingMin+"m²+ living",(s.landMinM2||s.landMaxM2)&&`land ${s.landMinM2||0}–${s.landMaxM2||"any"} m²`].filter(Boolean).join(", ");
+ const extra=[s.bedsMin&&s.bedsMin+"+ bed",size,s.seaView&&"sea view",s.pool&&"pool",s.builtWithin&&(s.builtWithin==="old30"?"30+ years old":"built in last "+s.builtWithin+" yrs"),(s.features||[]).length&&(s.features.join(", ")),s.foreign==="local"?"Mauritian-buyer properties only":s.foreign==="eligible"?"foreigner-eligible only":null,s.includeNew?"incl. new builds":"resale only",s.includeOffPlan?"incl. off-plan":null].filter(Boolean).join(" · ");
+ return `${esc(t)} · ${esc(loc)} · ${esc(p)}${extra?" · "+esc(extra):""}`}
+function renderSearches(){
+ if(!searches.length){$("#searchList").innerHTML=`<div class="empty"><h3>No searches saved</h3>Tap <b>+ New search</b> to tell the scanner what to look for.</div>`;return}
+ $("#searchList").innerHTML=searches.map(s=>`<div class="card searchcard"><div class="row spread"><h3>${esc(s.name||"Untitled search")}</h3><span class="pill ${s.active!==false?"src":""}">${s.active!==false?"Active":"Paused"}</span></div><div class="summary">${describe(s)}</div><div class="actions"><button class="btn ghost" data-edit="${esc(s._id)}">Edit</button><button class="btn ghost" data-toggle="${esc(s._id)}">${s.active!==false?"Pause":"Resume"}</button></div></div>`).join("")}
+function buildForm(){
+ $("#s_types").innerHTML=TYPES.map(([v,l])=>chip("type",v,l)).join("");
+ $("#s_regions").innerHTML=Object.entries(REGIONS).map(([r,towns])=>`<details class="region"><summary>${esc(r)}</summary><div class="chips">${chip("region",r,"Whole "+r)}${towns.map(t=>chip("town",t,t)).join("")}</div></details>`).join("");
+ $("#s_feats").innerHTML=FEATURES.map(f=>chip("feat",f,f)).join("")}
+buildForm();
+function openForm(s){editingId=s?s._id:null;$("#formTitle").textContent=s?"Edit search":"New search";$("#deleteSearch").hidden=!s;$("#delConfirm").hidden=true;
+ const set=(id,v)=>$(id).value=v??"";set("#s_name",s?.name);set("#s_cur",s?.currency||"MUR");set("#s_pmin",s?.priceMin);set("#s_pmax",s?.priceMax);set("#s_beds",s?.bedsMin);set("#s_baths",s?.bathsMin);
+ set("#s_living",s?.livingMin);set("#s_landmin",s?.landMinM2);set("#s_landmax",s?.landMaxM2);set("#s_seller",s?.seller||"any");set("#s_foreign",s?.foreign||"any");set("#s_age",s?.maxAgeDays);set("#s_built",s?.builtWithin);$("#s_sea").checked=!!s?.seaView;$("#s_pool").checked=!!s?.pool;set("#s_kw",s?.keywords);set("#s_xkw",s?.excludeKeywords);
+ $("#s_new").checked=!!s?.includeNew;$("#s_offplan").checked=!!s?.includeOffPlan;$("#s_active").checked=s?s.active!==false:true;
+ const mark=(n,arr)=>document.querySelectorAll(`input[name="${n}"]`).forEach(i=>i.checked=(arr||[]).includes(i.value));
+ mark("type",s?.types);mark("region",s?.regions);mark("town",s?.towns);mark("feat",s?.features);
+ document.querySelectorAll("details.region").forEach(d=>d.open=!!d.querySelector("input:checked"));
+ $("#searchForm").hidden=false;$("#searchForm").scrollIntoView({behavior:"smooth",block:"start"})}
+$("#newSearch").onclick=()=>openForm(null);
+$("#cancelForm").onclick=()=>{$("#searchForm").hidden=true};
+$("#searchList").addEventListener("click",async e=>{const ed=e.target.closest("[data-edit]"),tg=e.target.closest("[data-toggle]");
+ if(ed)openForm(searches.find(s=>s._id===ed.dataset.edit));
+ if(tg&&db){const s=searches.find(x=>x._id===tg.dataset.toggle);try{await db.doc("searches/"+s._id).update({active:s.active===false});}catch(err){toast("Couldn't update: "+(err.code||err.message))}}});
+const num=id=>{const v=$(id).value;return v===""?null:Number(v)};
+$("#searchForm").addEventListener("submit",async e=>{e.preventDefault();if(!db){toast("Not connected yet");return}
+ const data={name:$("#s_name").value.trim(),types:checked("type"),regions:checked("region"),towns:checked("town"),currency:$("#s_cur").value,priceMin:num("#s_pmin"),priceMax:num("#s_pmax"),
+  bedsMin:num("#s_beds"),bathsMin:num("#s_baths"),livingMin:num("#s_living"),landMinM2:num("#s_landmin"),landMaxM2:num("#s_landmax"),features:checked("feat"),seller:$("#s_seller").value,foreign:$("#s_foreign").value,
+  maxAgeDays:num("#s_age"),builtWithin:$("#s_built").value||null,seaView:$("#s_sea").checked,pool:$("#s_pool").checked,includeNew:$("#s_new").checked,includeOffPlan:$("#s_offplan").checked,keywords:$("#s_kw").value.trim(),excludeKeywords:$("#s_xkw").value.trim(),active:$("#s_active").checked,updatedAt:new Date().toISOString()};
+ $("#saveSearch").disabled=true;
+ try{if(editingId)await db.doc("searches/"+editingId).set(data);else await db.collection("searches").add({...data,createdAt:data.updatedAt});$("#searchForm").hidden=true;toast("Search saved")}
+ catch(err){toast(err.code==="invalid_argument"?"You don't have permission to change searches":"Couldn't save: "+(err.code||err.message))}
+ $("#saveSearch").disabled=false});
+$("#deleteSearch").onclick=async()=>{if($("#delConfirm").hidden){$("#delConfirm").hidden=false;return}
+ try{await db.doc("searches/"+editingId).delete();$("#searchForm").hidden=true;toast("Search deleted")}catch(err){toast("Couldn't delete: "+(err.code||err.message))}};
+
+// ---------- settings ----------
+function renderSettings(){const s=settings||{};const src=s.sources||{};
+ if(document.activeElement?.closest("#settingsForm"))return;
+ $("#st_fx").value=s.fxOverride||"";$("#st_email").value=s.email||"";$("#st_alerts").checked=s.alerts!==false;$("#st_digest").checked=!!s.quietNotes;$("#st_extra").value=(s.extraSites||[]).join("\n");
+ $("#srcList").innerHTML=SOURCES.map(([k,l])=>`<label class="toggle"><input type="checkbox" name="src" value="${k}" ${src[k]!==false?"checked":""}> ${esc(l)}</label>`).join("")}
+$("#settingsForm").addEventListener("submit",async e=>{e.preventDefault();if(!db)return;
+ const sources={};document.querySelectorAll('input[name="src"]').forEach(i=>sources[i.value]=i.checked);
+ const data={...(settings||{}),email:$("#st_email").value.trim(),alerts:$("#st_alerts").checked,quietNotes:$("#st_digest").checked,sources,extraSites:$("#st_extra").value.split(/\n+/).map(x=>x.trim()).filter(Boolean),fxOverride:$("#st_fx").value?Number($("#st_fx").value):null,updatedAt:new Date().toISOString()};
+ delete data._id;try{await db.doc("config/settings").set(data);document.activeElement?.blur();toast("Settings saved")}catch(err){toast("Couldn't save: "+(err.code||err.message))}});
+
+// ---------- money: fx, fees, calculator ----------
+let fx=null, fees={agentPct:2,agentVatPct:15,notaryPct:1.5,notaryVatPct:15,govPct:5};
+function rate(){return Number(settings?.fxOverride)||Number(fx?.gbpMur)||null}
+function toMur(l){if(!l||!l.price)return null;const c=String(l.currency||"Rs").toUpperCase();
+ if(c==="RS"||c==="MUR")return Number(l.price);if(c==="EUR"&&fx?.eurMur)return l.price*fx.eurMur;if(c==="USD"&&fx?.usdMur)return l.price*fx.usdMur;if((c==="GBP"||c==="£")&&rate())return l.price*rate();return null}
+const rs=n=>"Rs "+Math.round(n).toLocaleString("en-GB");
+const gbp=n=>rate()?"£"+Math.round(n/rate()).toLocaleString("en-GB"):"£ –";
+function costs(p){const f=fees;const agent=p*f.agentPct/100,agentVat=agent*f.agentVatPct/100,notary=p*f.notaryPct/100,notaryVat=notary*f.notaryVatPct/100,gov=p*f.govPct/100;
+ const extra=agent+agentVat+notary+notaryVat+gov;return{agent,agentVat,notary,notaryVat,gov,extra,total:p+extra}}
+function since(d){const m=Math.round((Date.now()-new Date(d))/6e4);if(!(m>=0))return"";if(m<60)return m+" min ago";const h=Math.round(m/60);if(h<48)return h+" h ago";return Math.round(h/24)+" days ago"}
+function renderFx(){const r=rate();
+ if(!r){$("#fxbar").innerHTML=`<span class="muted">Exchange rate not loaded yet. Add your own under Settings.</span>`;return}
+ const own=!!Number(settings?.fxOverride);
+ $("#fxbar").innerHTML=`<span class="rate">£1 = Rs ${r.toFixed(2)}</span><span>Rs 1,000,000 = <b>£${Math.round(1e6/r).toLocaleString("en-GB")}</b></span><span>Rs 1 = £${(1/r).toFixed(4)}</span><span class="muted">${own?"Your own rate":esc((fx.source||"Market rate")+(fx.at?" · updated "+since(fx.at):""))}</span>`;
+ const xr=$("#x_note");if(xr)xr.textContent=`Using £1 = Rs ${r.toFixed(2)}${own?" (your own rate)":fx?.at?" (mid-market, updated "+since(fx.at)+")":""}. Banks and transfer services add a margin, so expect slightly fewer rupees per pound.`;
+ if(document.activeElement!==$("#x_mur"))conv("gbp");calc(document.activeElement===$("#c_gbp")?"gbp":"mur");renderBudgetGbp()}
+function calc(from){const r=rate();let p;
+ if(from==="gbp"){const g=Number($("#c_gbp").value)||0;p=r?g*r:0;if(r)$("#c_mur").value=Math.round(p)}
+ else{p=Number($("#c_mur").value)||0;if(r&&document.activeElement!==$("#c_gbp"))$("#c_gbp").value=Math.round(p/r)}
+ const c=costs(p),f=fees,pct=p?c.extra/p*100:0,g=v=>r?"£"+Math.round(v/r).toLocaleString("en-GB"):"–";
+ const row=(name,rateTxt,v,cls="")=>`<tr class="${cls}"><td>${name}</td><td class="n">${rateTxt}</td><td class="n">${Math.round(v).toLocaleString("en-GB")}</td><td class="n">${g(v)}</td></tr>`;
+ $("#c_rows").innerHTML=row("Property price","",p)+row("Agent fee",f.agentPct+"%",c.agent)+row("VAT on agent fee",f.agentVatPct+"% of fee",c.agentVat,"sub")+row("Notary fee",f.notaryPct+"%",c.notary)+row("VAT on notary fee",f.notaryVatPct+"% of fee",c.notaryVat,"sub")+row("Government fees",f.govPct+"%",c.gov)+row("Fees on top of price",pct.toFixed(3).replace(/\.?0+$/,"")+"%",c.extra,"extra")+row("Total cost","",c.total,"total");
+ $("#c_total").textContent=rs(c.total);$("#c_totalgbp").textContent=r?"≈ "+g(c.total)+" · fees "+rs(c.extra)+" ("+g(c.extra)+")":"Add an exchange rate to see pounds"}
+$("#c_mur").addEventListener("input",()=>{$("#c_from").hidden=true;calc("mur")});
+$("#c_gbp").addEventListener("input",()=>{$("#c_from").hidden=true;calc("gbp")});
+function conv(from){const r=rate();if(!r)return;if(from==="gbp")$("#x_mur").value=+((Number($("#x_gbp").value)||0)*r).toFixed(2);else $("#x_gbp").value=+((Number($("#x_mur").value)||0)/r).toFixed(2)}
+$("#x_gbp").addEventListener("input",()=>conv("gbp"));$("#x_mur").addEventListener("input",()=>conv("mur"));
+const FEE_INPUTS={fee_agent:"agentPct",fee_agentvat:"agentVatPct",fee_notary:"notaryPct",fee_notaryvat:"notaryVatPct",fee_gov:"govPct"};
+function renderFees(){Object.entries(FEE_INPUTS).forEach(([id,k])=>{if(document.activeElement!==$("#"+id))$("#"+id).value=fees[k]})}
+Object.entries(FEE_INPUTS).forEach(([id,k])=>$("#"+id).addEventListener("input",()=>{const v=$("#"+id).value;if(v!==""){fees={...fees,[k]:Number(v)};calc("mur");renderMatches()}}));
+$("#saveFees").onclick=async()=>{if(!db)return;try{await db.doc("config/fees").set({...fees});toast("Fee rates saved")}catch(err){toast("Couldn't save: "+(err.code||err.message))}};
+
+// ---------- budget ----------
+function renderBudget(){if(document.activeElement?.closest("#budgetForm"))return;
+ const maxes=[...new Set(searches.map(s=>s.priceMax).filter(v=>v!=null))];$("#b_max").value=maxes.length===1?maxes[0]:"";
+ $("#b_local").checked=!searches.length||searches.every(s=>s.foreign==="local");renderBudgetGbp()}
+function renderBudgetGbp(){const v=Number($("#b_max").value);$("#b_gbp").textContent=v?`${rs(v)} ≈ ${gbp(v)} · all-in with fees ${rs(costs(v).total)} ≈ ${gbp(costs(v).total)}`:"No maximum set."}
+$("#b_max").addEventListener("input",renderBudgetGbp);
+$("#budgetForm").addEventListener("submit",async e=>{e.preventDefault();if(!db||!searches.length){toast("Add a search first");return}
+ const v=$("#b_max").value===""?null:Number($("#b_max").value),local=$("#b_local").checked;
+ try{for(const s of searches){await db.doc("searches/"+s._id).update({priceMax:v,currency:"MUR",foreign:local?"local":(s.foreign==="local"?"any":s.foreign),updatedAt:new Date().toISOString()})}document.activeElement?.blur();toast("Budget applied to "+searches.length+" searches")}
+ catch(err){toast("Couldn't update: "+(err.code||err.message))}});
+
+// ---------- save to phone ----------
+let dl=null;
+function csvCell(v){v=v==null?"":String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+async function saveFile(name,data){if(!dl){toast("Saving files isn't available in this view");return}
+ try{await dl.save({filename:name,data});$("#exportNote").textContent="Saved "+name+"."}catch(err){if(err.code!=="declined")toast("Couldn't save: "+(err.code||err.message))}}
+$("#exportCsv").onclick=()=>{const cols=["status","title","priceText","price","currency","priceGBP","allInMUR","allInGBP","location","region","type","beds","baths","livingM2","landM2","datePosted","firstSeen","source","agent","whatsapp","phone","email","url","ref","valueVerdict","valueScoreSD","cheaperThanPct","fairPriceMUR"];
+ const rows=listings.map(l=>{const m=toMur(l),r=rate();const vv=valueOf(l);return{...l,valueVerdict:vv.band?BANDS[vv.band][0]:"",valueScoreSD:vv.z!=null?vv.z.toFixed(2):"",cheaperThanPct:vv.pct!=null?Math.round((1-vv.pct)*100):"",fairPriceMUR:vv.fair?Math.round(vv.fair):"",priceGBP:m&&r?Math.round(m/r):"",allInMUR:m?Math.round(costs(m).total):"",allInGBP:m&&r?Math.round(costs(m).total/r):""}});
+ const csv=[cols.join(","),...rows.map(l=>cols.map(c=>csvCell(l[c])).join(","))].join("\n");
+ saveFile("property-scout-matches-"+new Date().toISOString().slice(0,10)+".csv","﻿"+csv)};
+$("#exportJson").onclick=()=>{const strip=a=>a.map(({_id,...x})=>({id:_id,...x}));
+ saveFile("property-scout-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"Mauritius Property Scout",exportedAt:new Date().toISOString(),settings,fees,searches:strip(searches),listings:strip(listings)},null,2))};
+$("#importJson").addEventListener("change",async e=>{const f=e.target.files[0];if(!f||!db)return;
+ try{const d=JSON.parse(await f.text());if(d.app!=="Mauritius Property Scout")throw new Error("This isn't a Property Scout backup");
+  const have=new Set(listings.map(l=>l._id));let ns=0,nl=0;
+  for(const s of d.searches||[]){const{id,...x}=s;if(id){await db.doc("searches/"+id).set(x);ns++}}
+  for(const l of d.listings||[]){const{id,...x}=l;if(id&&!have.has(id)){await db.doc("listings/"+id).set(x);nl++}}
+  if(d.settings){const{_id,...x}=d.settings;await db.doc("config/settings").set(x)}
+  if(d.fees)await db.doc("config/fees").set(d.fees);
+  $("#exportNote").textContent=`Restored ${ns} searches and ${nl} listings.`}catch(err){$("#exportNote").textContent="Couldn't restore: "+(err.message||err.code)}
+ e.target.value=""});
+
+// ---------- places ----------
+const MU_PATH="M118.8,101.4 L113.5,93.5 L124.5,82.3 L121.9,65.0 L145.0,32.5 L142.9,22.4 L157.1,31.4 L162.4,15.7 L183.9,14.0 L190.8,23.0 L212.3,27.4 L207.6,32.5 L216.0,63.8 L226.0,78.4 L245.4,82.9 L251.7,94.1 L240.7,99.7 L242.8,111.4 L258.5,116.5 L261.2,131.0 L278.0,151.8 L266.4,158.5 L272.2,164.1 L268.0,187.6 L260.1,179.2 L263.3,197.7 L257.0,207.8 L262.2,211.7 L254.9,211.1 L235.9,233.0 L221.8,229.6 L217.0,243.6 L235.4,261.5 L231.2,271.0 L220.2,269.4 L225.4,273.8 L195.5,296.2 L131.4,317.0 L88.3,303.0 L72.0,309.1 L47.8,297.4 L48.9,291.2 L38.9,295.1 L31.0,278.9 L14.7,283.9 L22.1,264.3 L33.6,271.6 L53.1,241.9 L41.5,234.6 L52.6,227.9 L42.0,221.2 L52.0,203.3 L43.6,184.2 L65.2,133.3 L79.4,119.8 L97.7,114.2 L102.5,119.3 L106.7,108.1 L115.1,113.1 L108.3,104.2 L118.8,101.4Z";
+const TOWNS={"grandbaie":[-20.013,57.580,"North"],"pereybere":[-19.995,57.589,"North"],"trouauxbiches":[-20.035,57.545,"North"],"montchoisy":[-20.025,57.552,"North"],"pointeauxcanonniers":[-20.003,57.565,"North"],"capmalheureux":[-19.984,57.614,"North"],"calodyne":[-19.998,57.636,"North"],"grandgaube":[-20.006,57.660,"North"],"goodlands":[-20.035,57.643,"North"],"pointeauxpiments":[-20.062,57.519,"North"],"balaclava":[-20.080,57.515,"North"],"triolet":[-20.057,57.548,"North"],"pamplemousses":[-20.105,57.575,"North"],"mapou":[-20.073,57.611,"North"],"piton":[-20.090,57.635,"North"],"petitraffray":[-20.031,57.623,"North"],"poudredor":[-20.059,57.682,"North"],"montmascal":[-20.020,57.585,"North"],"terrerouge":[-20.130,57.523,"North"],"rochesnoires":[-20.111,57.717,"East"],
+"flicenflac":[-20.274,57.371,"West"],"tamarin":[-20.326,57.373,"West"],"blackriver":[-20.362,57.373,"West"],"riviere noire":[-20.362,57.373,"West"],"rivierenoire":[-20.362,57.373,"West"],"petiterivierenoire":[-20.390,57.370,"West"],"lagaulette":[-20.427,57.360,"West"],"lemorne":[-20.455,57.318,"West"],"albion":[-20.209,57.405,"West"],"wolmar":[-20.290,57.367,"West"],"cascavelle":[-20.288,57.408,"West"],"bambous":[-20.256,57.413,"West"],"petiteriviere":[-20.190,57.452,"West"],"beauxsonges":[-20.277,57.411,"West"],"chamarel":[-20.425,57.383,"West"],"baieducap":[-20.490,57.380,"South"],
+"moka":[-20.219,57.496,"Centre"],"ebene":[-20.244,57.488,"Centre"],"quatrebornes":[-20.264,57.479,"Centre"],"rosehill":[-20.237,57.468,"Centre"],"beaubassin":[-20.228,57.469,"Centre"],"vacoas":[-20.298,57.478,"Centre"],"phoenix":[-20.286,57.497,"Centre"],"curepipe":[-20.316,57.525,"Centre"],"floreal":[-20.304,57.508,"Centre"],"portlouis":[-20.161,57.499,"Centre"],"candos":[-20.272,57.483,"Centre"],"chebel":[-20.215,57.483,"Centre"],"coromandel":[-20.180,57.468,"Centre"],"crevecoeur":[-20.190,57.556,"Centre"],"pailles":[-20.191,57.488,"Centre"],"cotedor":[-20.255,57.540,"Centre"],"valentina":[-20.278,57.505,"Centre"],"nouvellecouverte":[-20.208,57.560,"Centre"],"nouvelledecouverte":[-20.208,57.560,"Centre"],"notredame":[-20.170,57.554,"Centre"],
+"bellemare":[-20.190,57.773,"East"],"troudeaudouce":[-20.243,57.787,"East"],"postedeflacq":[-20.163,57.730,"East"],"palmar":[-20.215,57.787,"East"],"beauchamp":[-20.283,57.770,"East"],"centredeflacq":[-20.190,57.718,"East"],"flacq":[-20.190,57.718,"East"],"clemencia":[-20.243,57.708,"East"],"postelafayette":[-20.130,57.745,"East"],
+"mahebourg":[-20.408,57.700,"South"],"bluebay":[-20.443,57.711,"South"],"pointedesny":[-20.428,57.723,"South"],"belombre":[-20.502,57.400,"South"],"souillac":[-20.517,57.517,"South"],"rivieredesanguilles":[-20.485,57.552,"South"],"rosebelle":[-20.398,57.596,"South"],"lebouchon":[-20.468,57.600,"South"],"beauvallon":[-20.418,57.693,"South"],"montblanc":[-20.490,57.420,"South"]};
+const nrm=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z]/g,"");
+const REGION_CENTRE={North:[-20.04,57.6],West:[-20.32,57.39],Centre:[-20.25,57.5],East:[-20.2,57.74],South:[-20.46,57.6]};
+function placeOf(l){const parts=String(l.location||"").split(/[,\-–()]/).map(s=>s.trim()).filter(Boolean);
+ for(const p of parts){const k=nrm(p);if(TOWNS[k])return{lat:TOWNS[k][0],lng:TOWNS[k][1],region:TOWNS[k][2],town:p}}
+ const all=nrm(l.location+" "+l.title);for(const k in TOWNS){if(k.length>4&&all.includes(k))return{lat:TOWNS[k][0],lng:TOWNS[k][1],region:TOWNS[k][2],town:k}}
+ return null}
+function regionOf(l){if(l.region&&REGION_CENTRE[l.region])return l.region;return placeOf(l)?.region||null}
+function coordsOf(l){if(Number(l.lat)&&Number(l.lng))return{lat:+l.lat,lng:+l.lng,exact:true};const p=placeOf(l);if(p)return{lat:p.lat,lng:p.lng,exact:false,town:p.town};
+ const r=regionOf(l);return r?{lat:REGION_CENTRE[r][0],lng:REGION_CENTRE[r][1],exact:false,regionOnly:r}:null}
+function mapSvg(c){const x=(c.lng-57.28)*525.5,y=(-19.96-c.lat)*560;
+ return `<svg viewBox="0 0 290 325" role="img" aria-label="Map of Mauritius with the listing's location"><path d="${MU_PATH}" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/>
+ <g font-family="var(--mono)" font-size="9" fill="var(--muted)"><text x="150" y="60">NORTH</text><text x="18" y="200">WEST</text><text x="150" y="175">CENTRE</text><text x="232" y="150">EAST</text><text x="120" y="300">SOUTH</text><text x="122" y="130">Port Louis</text></g>
+ <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${c.exact?7:14}" fill="var(--new)" fill-opacity="${c.exact?1:.25}" stroke="var(--new)" stroke-width="2"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="var(--new)"/></svg>`}
+
+// ---------- market value (normal distribution) ----------
+// Each listing is compared with 20–50 resale adverts of the same kind from 2026, taken from every site the scanner reads
+// (comps collection + the other matches here): same town first, then the nearest towns in the same region.
+// Only price and floor/land area are used, because every site shows those. The bell curve is fitted to log price per m².
+let comps=[],refs=[],agencyDir=null,valCache=new Map();
+let cmpPeriod="2026";try{const v=localStorage.getItem("f#fPeriod");cmpPeriod=v==="12m"?"2026u":v||"2026"}catch(e){}
+const MIN_N=20,MAX_N=50,PICK_N=22; // pick 22 so that trimming the most extreme price at each end still leaves at least 20
+const WEIGHTS={house:{lv:.6,ld:.4},apartment:{lv:1},land_res:{ld:1},land_agri:{ld:1},land_com:{ld:1}};
+const KIND_LABEL={lv:"Price per m² of living space",ld:"Price per m² of land"};
+const KIND_UNIT={lv:"/m² living",ld:"/m² land"};
+const BANDS={below:["Below market value","value"],good:["Good value","good"],fair:["Around market price",""],high:["Slightly above average","high"],above:["Above market value","above"],check:["Unusually cheap: check sizes","warn"]};
+const YEAR_LABEL={d:"posted 2026 (date on advert)",e:"listed 2026 (from listing number)",u:"date not shown, on sale now",o:"listed before 2026"};
+const PERIOD_TEXT={"2026":"2026 adverts","2026u":"2026 and undated adverts",all:"adverts on sale now"};
+// extra towns (coordinates) used to find the nearest neighbours of a town
+Object.assign(TOWNS,{"hauterive":[-20.098,57.700,"East"],"boischeri":[-20.425,57.530,"South"],"riambel":[-20.510,57.480,"South"],"savannah":[-20.470,57.500,"South"],"maredalbert":[-20.390,57.600,"South"],
+ "rivieredurempart":[-20.100,57.680,"North"],"plainedespapayes":[-20.070,57.580,"North"],"anselaraie":[-20.000,57.640,"North"],"arsenal":[-20.100,57.530,"North"],"baiedutombeau":[-20.120,57.510,"North"],"stantoine":[-20.050,57.630,"North"],"rivieredescalebasses":[-20.090,57.560,"North"],
+ "groscailloux":[-20.210,57.430,"West"],"lapreneuse":[-20.350,57.365,"West"],"lamivoie":[-20.330,57.400,"West"],
+ "lallmatie":[-20.190,57.660,"East"],"bonaccueil":[-20.180,57.660,"East"],"brasdeau":[-20.150,57.725,"East"],"quatrecocos":[-20.210,57.770,"East"],"belair":[-20.260,57.750,"East"],"grandsable":[-20.310,57.770,"East"],"mareaustralia":[-20.250,57.720,"East"],
+ "quartiermilitaire":[-20.240,57.590,"Centre"],"saintpierre":[-20.220,57.520,"Centre"],"stpierre":[-20.220,57.520,"Centre"],"verdun":[-20.230,57.550,"Centre"],"campdemasque":[-20.240,57.660,"Centre"],"sebastopol":[-20.290,57.670,"Centre"],"montagneblanche":[-20.270,57.650,"Centre"],"soreze":[-20.180,57.490,"Centre"],"maconde":[-20.310,57.470,"Centre"],"stjuliendhotman":[-20.220,57.640,"Centre"],
+ "laflora":[-20.400,57.560,"South"],"pointeauxsables":[-20.170,57.470,"Centre"],"lapointe":[-20.170,57.470,"Centre"],"stpaul":[-20.270,57.490,"Centre"],"saintpaul":[-20.270,57.490,"Centre"],"belombre":[-20.502,57.400,"South"],"mahebourg":[-20.408,57.700,"South"],"chemingrenier":[-20.490,57.470,"South"],"surinam":[-20.510,57.505,"South"],"plainemagnien":[-20.430,57.660,"South"],"nouvellefrance":[-20.370,57.560,"South"],"ansejonchee":[-20.370,57.730,"South"],"chamouny":[-20.470,57.470,"South"],"lescalier":[-20.470,57.560,"South"]});
+const TALIAS={grandrivierenoire:"blackriver",rivierenoire:"blackriver",montchoisygrandbaie:"montchoisy",pereyberegrandbaie:"pereybere",sodnac:"quatrebornes",palma:"quatrebornes",trianon:"quatrebornes",
+ rochesbrunes:"rosehill",bellerose:"rosehill",forestside:"curepipe",wooton:"curepipe",hermitage:"curepipe",highlands:"phoenix",flicflac:"flicenflac",lapreneuse:"tamarin"};
+const townKey=s=>{const k=nrm(String(s||"").split(/[,(/–-]/)[0]);return TALIAS[k]||k};
+const townPos=k=>TOWNS[k]?{lat:TOWNS[k][0],lng:TOWNS[k][1]}:null;
+function km(a,b){const dy=(a.lat-b.lat)*111,dx=(a.lng-b.lng)*111*Math.cos(a.lat*Math.PI/180);return Math.sqrt(dx*dx+dy*dy)}
+// is this advert from 2026? d = posted date shown, e = listing number shows 2026, o = before 2026, u = unknown
+function yearClass(e){if(e.y)return e.y;const d=e.d||e.datePosted;
+ if(d&&!/updat/i.test(e.dk||""))return String(d).slice(0,10)>="2026-01-01"?"d":"o";
+ const u=String(e.u||e.url||""),m=u.match(/(\d{5,7})\/?$/)||u.match(/\/details\/(\d+)/),pid=Number(e.pid||(m&&m[1]));
+ const pa=u.match(/\/annonce\/(\d{4})(\d{2})(\d{2})-/);if(pa)return pa[1]>="2026"?"d":"o";
+ if(pid&&/propertycloud/.test(u))return pid>=303000?"e":pid<297000?"o":"u";
+ if(pid&&/propertymap/.test(u))return pid>=24450?"e":"o";return"u"}
+function periodOk(y){return cmpPeriod==="all"?true:cmpPeriod==="2026u"?y!=="o":(y==="d"||y==="e")}
+function segOf(l){const t=nrm(l.type)+" "+nrm(l.title);if(/land|terrain|plot/.test(t)){if(/agri/.test(t))return"land_agri";if(/commerc/.test(t))return"land_com";return"land_res"}
+ if(/apart|penthouse|flat|studio|duplex/.test(nrm(l.type))||/apart|penthouse|flat|studio/.test(t))return"apartment";return"house"}
+function phi(z){const x=Math.abs(z)/Math.SQRT2,t=1/(1+0.3275911*x),y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return .5*(1+Math.sign(z)*y)}
+const sizeOf=(o,kind)=>kind==="lv"?Number(o.livingM2):Number(o.landM2);
+function fmtK(n){n=Math.round(n);return n>=1e6?(n/1e6).toFixed(n>=1e7?1:2).replace(/\.?0+$/,"")+"M":n>=1e3?Math.round(n/1e3)+"k":String(n)}
+const siteOf=u=>{const m=String(u||"").match(/https?:\/\/(?:www\.)?([^/]+)/);return m?m[1]:"other"};
+// every 2026 advert of this kind in the listing's region, from all sites, with its distance from the listing's town
+function poolFor(l,kind,region,pos,tk){const group=segOf(l),pool=[],seen=new Set([l.url,...(l.altUrls||[])]);
+ const add=(e,key,name)=>{const k=townKey(key),p=townPos(k);pool.push({...e,tk:k,t:String(name||key||"").split(",")[0].trim(),dist:k&&k===tk?0:pos&&p?km(pos,p):null})};
+ comps.forEach(d=>{if(d.group!==group||String(d.region||"").toLowerCase()!==region.toLowerCase())return;(d.entries||[]).forEach(e=>{const s=e[kind];if(!e.p||!s||seen.has(e.u))return;
+  const y=yearClass(e);if(!periodOk(y))return;seen.add(e.u);add({v:e.p/s,p:e.p,s,u:e.u,y,site:e.s||siteOf(e.u)},e.tk||e.t,e.t)})});
+ listings.forEach(o=>{if(o._id===l._id||seen.has(o.url)||o.isNewBuild||segOf(o)!==group||regionOf(o)!==region)return;const m=toMur(o),s=sizeOf(o,kind);if(!m||!s)return;
+  const y=yearClass({u:o.url,d:o.datePosted});if(!periodOk(y))return;seen.add(o.url);add({v:m/s,p:m,s,u:o.url,y,site:siteOf(o.url)},o.location,o.location)});
+ return pool}
+function pickComps(pool,size){
+ // similar-size adverts make a fairer comparison (a big plot sells for less per m²); relax the size window only if needed
+ let P=pool;for(const r of [3,5,Infinity]){P=pool.filter(e=>e.s>=size/r&&e.s<=size*r);if(P.length>=MIN_N)break}
+ const sim=e=>Math.abs(Math.log(e.s/size));
+ const same=P.filter(e=>e.dist===0).sort((a,b)=>sim(a)-sim(b));
+ if(same.length>=PICK_N)return{list:same.slice(0,MAX_N),nTown:Math.min(same.length,MAX_N),radius:0};
+ const others=P.filter(e=>e.dist!==0).sort((a,b)=>(a.dist??999)-(b.dist??999)||sim(a)-sim(b));
+ const need=Math.min(PICK_N,P.length)-same.length;if(same.length+others.length<MIN_N)return{list:[...same,...others],short:true};
+ const r20=others[need-1].dist??999,extra=others.slice(0,need);
+ for(const e of others.slice(need)){if(same.length+extra.length>=MAX_N||(e.dist??999)>r20+1.5)break;extra.push(e)}
+ return{list:[...same,...extra],nTown:same.length,radius:r20}}
+function statsFor(l,kind){const m=toMur(l),size=sizeOf(l,kind);if(!m||!size)return null;const x=m/size;
+ const region=regionOf(l);if(!region)return{kind,short:true,n:0,why:"the advert doesn't say which region it's in"};
+ const c=coordsOf(l),tk=townKey(l.location),pos=c&&!c.regionOnly?{lat:c.lat,lng:c.lng}:null,tName=String(l.location||"").split(",")[0]||region;
+ const pick=pickComps(poolFor(l,kind,region,pos,tk),size);
+ if(pick.short)return{kind,short:true,n:pick.list.length,why:`only ${pick.list.length} comparable ${PERIOD_TEXT[cmpPeriod]} in the ${region} so far (needs ${MIN_N})`};
+ let used=pick.list.slice().sort((a,b)=>a.v-b.v);const nAll=used.length;const k=nAll>=PICK_N?Math.max(1,Math.floor(nAll*.05)):0;if(k)used=used.slice(k,nAll-k);
+ // prices per m² are skewed (a few luxury adverts), so the bell curve is fitted to their logarithms (log-normal)
+ const lv=used.map(e=>Math.log(e.v)),n=lv.length,mu=lv.reduce((a,b)=>a+b,0)/n,sg=Math.sqrt(lv.reduce((a,b)=>a+(b-mu)**2,0)/(n-1));if(!sg)return null;
+ const z=(Math.log(x)-mu)/sg,mean=Math.exp(mu);
+ const near={};used.forEach(e=>{if(e.dist!==0){near[e.t]=(near[e.t]||0)+1}});const nTown=used.filter(e=>e.dist===0).length;
+ const scope=pos?`${nTown} in ${tName}${n>nTown?` + ${n-nTown} in the nearest ${region} towns${pick.radius?` (within ${Math.ceil(pick.radius+1.5)} km)`:""}`:""}`:`${n} similar-size adverts across the ${region} (town not known)`;
+ return{kind,x,mean,median:Math.exp(lv.slice().sort((a,b)=>a-b)[Math.floor(n/2)]),mu,sg,lo:Math.exp(mu-sg),hi:Math.exp(mu+sg),n,trimmed:nAll-n,scope,near,used,z,pct:phi(z),size,fair:mean*size}}
+function valueOf(l){const key=[l._id,l.price,l.currency,l.livingM2,l.landM2,l.location,rate(),cmpPeriod,comps.length].join("|");if(valCache.has(key))return valCache.get(key);
+ const g=segOf(l),w=WEIGHTS[g]||{ld:1},parts={},shorts={};let sw=0,sz=0,sf=0;
+ for(const k in w){const s=statsFor(l,k);if(s&&s.short){shorts[k]=s;continue}if(s&&s.z>-8&&s.z<8){parts[k]=s;sw+=w[k];sz+=w[k]*s.z;sf+=w[k]*s.fair}}
+ const z=sw?sz/sw:null,m=toMur(l),primary=parts.lv||parts.ld||null,fair=sw?sf/sw:null;
+ const band=z==null?null:(primary&&(primary.z<=-3||primary.x<primary.mean*.3))?"check":z<=-1?"below":z<=-.5?"good":z<.5?"fair":z<1?"high":"above";
+ const r={parts,shorts,weights:w,z,pct:z==null?null:phi(z),primary,fair,saving:fair&&m?fair-m:null,band,below:band==="below",coverage:sw};
+ valCache.set(key,r);return r}
+function needText(l,v){const sh=v&&Object.values(v.shorts||{})[0];if(sh)return "Not enough comparable adverts yet: "+sh.why+".";
+ const g=segOf(l);return g.startsWith("land")?"Needs a land size in the advert.":g==="apartment"?"Needs a living area in the advert.":"Needs a living area or land size in the advert."}
+function miniBell(z){const W=120,H=36,X=t=>2+(t+3)/6*(W-4),Y=t=>H-6-Math.exp(-t*t/2)*(H-10);let d="",sh=`M${X(-3)},${H-6}`;
+ for(let i=0;i<=40;i++){const t=-3+i*.15;d+=(i?"L":"M")+X(t).toFixed(1)+","+Y(t).toFixed(1);if(t<=-1)sh+="L"+X(t).toFixed(1)+","+Y(t).toFixed(1)}
+ sh+=`L${X(-1).toFixed(1)},${Y(-1).toFixed(1)}L${X(-1).toFixed(1)},${H-6}Z`;const x=X(Math.max(-3,Math.min(3,z)));
+ return `<svg class="mini" viewBox="0 0 ${W} ${H}" aria-hidden="true"><path d="${sh}" fill="var(--ok)" fill-opacity=".22"/><path d="${d}" fill="none" stroke="var(--muted)" stroke-width="1.3"/><line x1="${X(0)}" y1="4" x2="${X(0)}" y2="${H-6}" stroke="var(--muted)" stroke-dasharray="2 2"/><line x1="2" y1="${H-6}" x2="${W-2}" y2="${H-6}" stroke="var(--line)"/><line x1="${x.toFixed(1)}" y1="1" x2="${x.toFixed(1)}" y2="${H-3}" stroke="var(--new)" stroke-width="2.5"/></svg>`}
+function valueStrip(l,v){if(v.z==null)return `<div class="vstrip none"><span class="pill">Value: not enough data</span><span>${esc(needText(l,v))}</span></div>`;
+ const[lab,cls]=BANDS[v.band],p=v.primary,vsAvg=Math.round((p.x/p.mean-1)*100),cheaper=Math.round((1-v.pct)*100),nm=Object.keys(v.parts).length;
+ return `<button class="vstrip" data-detail-value="${esc(l._id)}" aria-label="Open the value analysis">${miniBell(v.z)}<span class="vtext"><span class="pill ${cls}">${lab}</span> cheaper than <b>${cheaper}%</b> of ${p.n} comparable ${PERIOD_TEXT[cmpPeriod]}${nm>1?` (${nm} measures)`:""}<br>
+ <span class="mono">Rs ${fmtK(p.x)}${KIND_UNIT[p.kind]} vs typical Rs ${fmtK(p.mean)} (${vsAvg>0?"+":""}${vsAvg}%)</span>${v.fair?` · fair price ≈ <b>Rs ${fmtK(v.fair)}</b>${v.saving>0?` <span style="color:var(--ok)">(Rs ${fmtK(v.saving)} under)</span>`:""}`:""}</span></button>`}
+function bell(s){const W=320,H=120,X=t=>10+(Math.max(-3,Math.min(3,t))+3)/6*(W-20),Y=t=>H-22-Math.exp(-t*t/2)*(H-40);
+ let d="",fill="";for(let i=0;i<=60;i++){const t=-3+i*.1,px=X(t),py=Y(t);d+=(i?"L":"M")+px.toFixed(1)+","+py.toFixed(1);if(t<=Math.max(-3,Math.min(3,s.z)))fill+=(fill?"":"M"+px.toFixed(1)+","+(H-22))+"L"+px.toFixed(1)+","+py.toFixed(1)}
+ const xm=X(s.z);fill+=`L${xm.toFixed(1)},${H-22}Z`;const u=s.kind==="bed"?"Rs/bedroom":"Rs/m²",at=t=>fmtK(Math.exp(s.mu+t*s.sg));
+ return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:440px;height:auto" role="img" aria-label="${esc(KIND_LABEL[s.kind])} compared with similar adverts">
+ <path d="${fill}" fill="var(--accent-soft)"/><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+ <line x1="10" y1="${H-22}" x2="${W-10}" y2="${H-22}" stroke="var(--line)"/>
+ <line x1="${X(0)}" y1="14" x2="${X(0)}" y2="${H-22}" stroke="var(--muted)" stroke-dasharray="3 3"/>
+ <line x1="${X(-1)}" y1="${Y(-1).toFixed(1)}" x2="${X(-1)}" y2="${H-22}" stroke="var(--ok)" stroke-dasharray="2 3"/>
+ <line x1="${xm.toFixed(1)}" y1="8" x2="${xm.toFixed(1)}" y2="${H-22}" stroke="var(--new)" stroke-width="2.5"/>
+ <g font-family="var(--mono)" font-size="9.5" fill="var(--muted)"><text x="10" y="${H-8}">${at(-3)}</text><text x="${X(-1)}" y="${H-8}" text-anchor="middle">${at(-1)}</text><text x="${X(0)}" y="${H-8}" text-anchor="middle">${at(0)}</text><text x="${X(1)}" y="${H-8}" text-anchor="middle">${at(1)}</text><text x="${W-10}" y="${H-8}" text-anchor="end">${at(3)}</text></g>
+ <text x="${Math.min(W-60,Math.max(40,xm)).toFixed(1)}" y="10" font-family="var(--mono)" font-size="10" font-weight="600" fill="var(--new)" text-anchor="middle">this one</text></svg>
+ <div class="note mono" style="text-align:center">${u} · green line = 1 SD under typical</div>`}
+function valueBlock(s,weight){const cheaper=Math.round((1-s.pct)*100),u=KIND_UNIT[s.kind];
+ const verdict=s.z<=-3?"Unusually cheap: check the sizes in the advert":s.z<=-1?"Below market value":s.z<=-.5?"Good value":s.z<.5?"Around market price":s.z<1?"Slightly above average":"Above market value";
+ return `<div class="panel" style="gap:10px"><div class="row spread"><h3>${KIND_LABEL[s.kind]}${weight?` <span class="note">(${Math.round(weight*100)}% of score)</span>`:""}</h3><span class="pill ${s.z<=-3?"warn":s.z<=-1?"value":s.z<=-.5?"good":s.z>=1?"above":s.z>=.5?"high":""}">${verdict}</span></div>
+ ${bell(s)}
+ <div class="note">This listing: <b>Rs ${Math.round(s.x).toLocaleString("en-GB")}${u}</b>. Typical for <b>${s.n} ${PERIOD_TEXT[cmpPeriod]}</b> (${esc(s.scope)}): Rs ${Math.round(s.mean).toLocaleString("en-GB")}${u} (median Rs ${Math.round(s.median).toLocaleString("en-GB")}; two-thirds fall between Rs ${Math.round(s.lo).toLocaleString("en-GB")} and Rs ${Math.round(s.hi).toLocaleString("en-GB")}). That is <b>${s.z>=0?"+":""}${s.z.toFixed(2)} standard deviations</b> from typical, cheaper than about <b>${cheaper}%</b> of them. At the typical rate this property would cost about <b>${rs(s.fair)}</b>.</div>
+ ${compsTable(s)}</div>`}
+function countList(arr){const c={};arr.forEach(x=>c[x]=(c[x]||0)+1);return Object.entries(c).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`${k} ${n}`).join(", ")}
+function compsTable(s){const u=s.used.slice().sort((a,b)=>(a.dist??99)-(b.dist??99)||a.v-b.v);
+ return `<details><summary class="note" style="cursor:pointer"><b>See the ${s.n} adverts used</b> · sites: ${esc(countList(u.map(e=>e.site.replace(/\.(mu|com)$/,""))))} · ${esc(countList(u.map(e=>({d:"date on advert",e:"listing number",u:"undated",o:"pre-2026"})[e.y])))}${s.trimmed?` · ${s.trimmed} extreme price${s.trimmed>1?"s":""} trimmed`:""}</summary>
+ <div class="tablewrap" style="padding-top:8px"><table class="cost"><thead><tr><th>Town</th><th>Rs/m²</th><th>Price</th><th>m²</th><th>2026?</th></tr></thead><tbody>${u.map(e=>`<tr><td><a href="${esc(e.u)}" target="_blank" rel="noopener" style="color:var(--accent)">${esc(e.t||"?")}</a>${e.dist?` <span class="note">${e.dist.toFixed(1)} km</span>`:""}</td><td class="n">${fmtK(e.v)}</td><td class="n">${fmtK(e.p)}</td><td class="n">${Math.round(e.s)}</td><td class="n" title="${esc(YEAR_LABEL[e.y])}">${e.y==="d"?"date":e.y==="e"?"est.":e.y==="u"?"?":"old"}</td></tr>`).join("")}</tbody></table></div>
+ <p class="note">2026? — date: posted date shown on the advert · est.: listing number issued in 2026 (sites like propertycloud don't show dates) · ?: no date, still on sale.</p></details>`}
+function scorePanel(l,v){const[lab,cls]=BANDS[v.band],m=toMur(l),cheaper=Math.round((1-v.pct)*100);
+ const used=Object.keys(v.parts).map(k=>KIND_LABEL[k].replace("Price ","").toLowerCase()).join(", "),missing=Object.keys(v.weights).filter(k=>!v.parts[k]).map(k=>KIND_LABEL[k].replace("Price ","").toLowerCase());
+ return `<div class="scorebox"><div class="row spread"><span class="big">${lab}</span><span class="pill ${cls}">score ${v.z>=0?"+":""}${v.z.toFixed(2)} SD</span></div>
+ ${miniBell(v.z).replace('class="mini"','class="mini" style="width:100%;max-width:360px;height:auto"')}
+ <div>Cheaper than about <b>${cheaper}%</b> of comparable ${PERIOD_TEXT[cmpPeriod]} nearby, judged on ${esc(used)}.${missing.length?` <span class="note">Not used (no size in the advert or too few comparables): ${esc(missing.join(", "))}.</span>`:""}</div>
+ ${v.fair&&m?`<div>Fair price at typical local rates: <b>${rs(v.fair)}</b> · asking ${rs(m)} · ${v.saving>=0?`<b style="color:var(--ok)">${rs(v.saving)} under</b>`:`<b style="color:var(--new)">${rs(-v.saving)} over</b>`}</div>`:""}
+ <div class="note">Bands (bell curve fitted to log prices, which suits property prices): below market value = 1+ standard deviation under typical (cheapest ~16%); good value = 0.5–1 SD under; around market = within ±0.5 SD; above market = 1+ SD over. Each curve uses 20–50 resale adverts of the same kind: all from the same town if it has 20, otherwise the nearest towns in the same region are added, closest first, preferring similar sizes. Only price and m² are used because every site shows them. Score weights: houses 60% living m², 40% land m²; apartments living m²; land land m².</div></div>`}
+
+// ---------- detail sheet ----------
+let cur=null,curTab="photos";
+function openDetail(id,tab){cur=listings.find(l=>l._id===id);if(!cur)return;$("#sheetTitle").textContent=cur.title||"Listing";
+ const m=toMur(cur);$("#sheetPrice").innerHTML=`<span class="price">${esc(fmtPrice(cur))}</span>${m?`<span class="gbp">≈ ${gbp(m)}</span><span class="fees">Incl. fees ${gbp(costs(m).total)} <span class="muted">(${rs(costs(m).total)})</span></span>`:""}`;
+ $("#sheet").hidden=false;document.body.style.overflow="hidden";sheetTab(tab||"photos")}
+function closeDetail(){$("#sheet").hidden=true;document.body.style.overflow="";cur=null}
+$("#sheetClose").onclick=closeDetail;document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#sheet").hidden)closeDetail()});
+$("#sheetTabs").addEventListener("click",e=>{const b=e.target.closest("button[data-st]");if(b)sheetTab(b.dataset.st)});
+function sheetTab(t){curTab=t;document.querySelectorAll("#sheetTabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.st===t));const l=cur,m=toMur(l);let h="";
+ const advert=`<div class="row"><a class="btn primary" href="${esc(l.url)}" target="_blank" rel="noopener">Open the advert ↗</a>${(l.altUrls||[]).map((u,i)=>`<a class="btn ghost" href="${esc(u)}" target="_blank" rel="noopener">Also listed here ${i+1} ↗</a>`).join("")}</div>`;
+ if(t==="photos"){const ph=pics(l),links=l.photoUrls||[],mine=l.userPhotos||[];
+  const car=ph.length?`<div class="carousel" id="carousel">${ph.map((u,i)=>`<img src="${esc(u)}" alt="Photo ${i+1} of ${ph.length}" loading="${i?"lazy":"eager"}">`).join("")}</div><div class="note" id="phCount">Photo 1 of ${ph.length}${ph.length>1?" · swipe for more":""}</div>`:"";
+  const linkBox=links.length?`<div class="panel" style="gap:8px"><h3>${links.length} photo${links.length>1?"s":""} on the advert</h3><div class="note">These open on the agency's site.${photoCfg&&!(photoCfg.workingDomains||[]).length?" The agent can't copy them into the app yet (see Settings → Photos in the app).":""}</div><div class="chips">${links.map((u,i)=>`<a class="btn" href="${esc(u)}" target="_blank" rel="noopener">Photo ${i+1} ↗</a>`).join("")}</div></div>`:"";
+  const none=!ph.length&&!links.length?`<div class="empty"><h3>No photos yet</h3>Open the advert to see its photos${/lexpress|instagram|tiktok|facebook/i.test(l.source||"")?" (this site doesn't let the scanner read photos)":""}, then add the ones you like below.</div>`:"";
+  const upl=assets?`<div class="upl"><h3>Add photos</h3><div class="note">Save photos from the advert to your phone (press and hold a photo → Save, or take a screenshot), then pick them here. They're kept with this match in this browser, on this device.</div><input type="file" id="phFile" accept="image/*" multiple aria-label="Choose photos to add"><span class="note" id="phMsg"></span>${mine.length?`<div class="mythumbs">${mine.map(id=>`<figure><img src="/_blob/${esc(id)}" alt="" loading="lazy"><button type="button" data-rmph="${esc(id)}" aria-label="Remove this photo">Remove</button></figure>`).join("")}</div>`:""}</div>`
+   :`<div class="note">Adding photos isn't available in this browser.</div>`;
+  h=car+none+advert+linkBox+upl}
+ if(t==="desc"){const per=l.landM2?` (${(l.landM2/42.208).toFixed(1)} perches)`:"";const yn=v=>v===true?"Yes":v===false?"No":"Not stated";
+  const f=[["Bedrooms",l.beds],["Bathrooms",l.baths],["Living area",l.livingM2&&l.livingM2+" m²"],["Land",l.landM2&&Math.round(l.landM2)+" m²"+per],["Year built",l.yearBuilt],["Sea view",yn(l.seaView)],["Pool",yn(l.pool)],["Type",l.type],["Posted",l.datePosted?fmtDate(l.datePosted)+" ("+ago(l.datePosted)+")":"Not shown"],["Found",ago(l.firstSeen)],["Ref",l.ref],["Source",l.source]].filter(x=>x[1]!=null&&x[1]!=="");
+  const wa=(l.whatsapp||"").replace(/[^\d]/g,"");
+  h=`<div class="facts">${f.map(([k,v])=>`<div>${esc(k)}<b>${esc(v)}</b></div>`).join("")}</div>
+  <div class="panel" style="gap:8px"><h3>About this property</h3><div style="white-space:pre-line">${esc(l.details||l.description||"The scanner hasn't saved a description for this one yet. Open the advert for the full text.")}</div>${(l.features||[]).length?`<div class="chips">${l.features.map(x=>`<span class="pill">${esc(x)}</span>`).join("")}</div>`:""}</div>
+  ${(l.agent||l.phone||wa||l.email)?`<div class="panel" style="gap:6px"><h3>Contact</h3>${l.agent?`<b>${esc(l.agent)}</b>`:""}${wa?`<a href="https://wa.me/${wa}" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700">WhatsApp ${esc(l.whatsapp)}</a>`:""}${l.phone?`<span class="mono" style="user-select:all">☎ ${esc(l.phone)}</span>`:""}${l.email?`<span class="mono" style="user-select:all">✉ ${esc(l.email)}</span>`:""}${l.contactSource?`<span class="note">From the ${esc(l.contactSource)}</span>`:""}</div>`:""}${advert}`}
+ if(t==="map"){const c=coordsOf(l);const q=c?`${c.lat},${c.lng}`:encodeURIComponent((l.location||"")+", Mauritius");
+  h=c?`<div class="mapwrap">${mapSvg(c)}</div><div class="note">${c.exact?"Position given in the advert.":c.regionOnly?"Rough position only: the "+esc(c.regionOnly)+" region.":"Approximate: the centre of "+esc(l.location||c.town)+". The advert doesn't give an exact position."}</div>`:`<div class="empty"><h3>Location unknown</h3>The advert doesn't say where it is.</div>`;
+  h+=`<div class="row"><a class="btn primary" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">Open in Google Maps ↗</a></div>`}
+ if(t==="value"){const v=valueOf(l);const g=segOf(l);
+  if(v.z==null)h=`<div class="empty"><h3>Not enough information to judge value</h3>${esc(needText(l,v))} Each comparison needs at least ${MIN_N} ${PERIOD_TEXT[cmpPeriod]} of the same kind in the same region.${cmpPeriod==="2026"?" You can widen it with \"2026 + undated adverts\" in the Matches filters.":""} The scanner adds more adverts every scan.</div>`;
+  else{h=scorePanel(l,v);for(const k of ["lv","ld"])if(v.parts[k])h+=valueBlock(v.parts[k],v.weights[k]);}
+  const reg=regionOf(l),rr=refs.filter(r=>(r.group===g||(g.startsWith("land")&&r.group==="land"))&&(!reg||nrm(r.area).includes(nrm(reg))||nrm(r.area).includes(nrm(String(l.location||"").split(",")[0])))).slice(0,6);
+  h+=`<div class="panel" style="gap:6px"><h3>Published figures</h3>${rr.length?rr.map(r=>`<div class="note"><b>${esc(r.area)}</b>: ${esc(Array.isArray(r.valueRsPerM2)?r.valueRsPerM2.map(x=>"Rs "+Math.round(x).toLocaleString("en-GB")).join("–"):r.valueRsPerM2?"Rs "+Math.round(r.valueRsPerM2).toLocaleString("en-GB"):r.value)}/m² · ${esc(r.source||"")} ${esc(r.year||"")} ${r.url?`<a href="${esc(r.url)}" target="_blank" rel="noopener" style="color:var(--accent)">source ↗</a>`:""}</div>`).join(""):`<div class="note">No published figures for this area yet.</div>`}
+  <div class="note">Comparisons use asking prices of ${PERIOD_TEXT[cmpPeriod]} for resale property (not foreigner schemes, euro-priced stock or new builds) from every site the scanner reads: propertycloud, propertymap, expat.com, L'Express classifieds, other classifieds and agency sites, plus the other matches here. The published figures above are a separate cross-check and are not mixed into the curve. Mauritius doesn\'t publish individual sold prices, so asking prices are the best available guide; the published figures above (agency reports, Statistics Mauritius) are a cross-check. The top and bottom 5% of prices are trimmed so one odd advert can\'t skew the average.</div></div>`}
+ if(t==="costs"){if(!m)h=`<div class="empty"><h3>No price shown</h3></div>`;else{const c=costs(m),f=fees,g2=v=>gbp(v);
+  const row=(n,r,v,cls="")=>`<tr class="${cls}"><td>${n}</td><td class="n">${r}</td><td class="n">${Math.round(v).toLocaleString("en-GB")}</td><td class="n">${g2(v)}</td></tr>`;
+  h=`<div class="bigtotal"><span class="l">Total you pay, including fees</span><span class="v">${rs(c.total)}</span><span class="s">≈ ${g2(c.total)} · fees ${rs(c.extra)}</span></div><div class="tablewrap"><table class="cost"><thead><tr><th>Item</th><th>Rate</th><th>Rs</th><th>£</th></tr></thead><tbody>${row("Property price","",m)+row("Agent fee",f.agentPct+"%",c.agent)+row("VAT on agent fee",f.agentVatPct+"% of fee",c.agentVat,"sub")+row("Notary fee",f.notaryPct+"%",c.notary)+row("VAT on notary fee",f.notaryVatPct+"% of fee",c.notaryVat,"sub")+row("Government fees",f.govPct+"%",c.gov)+row("Fees on top","",c.extra,"extra")+row("Total cost","",c.total,"total")}</tbody></table></div>`}}
+ $("#sheetBody").innerHTML=`<div>${h}</div>`;$("#sheetBody").scrollTop=0;
+ const car=$("#carousel");if(car)car.addEventListener("scroll",()=>{const i=Math.round(car.scrollLeft/car.clientWidth);$("#phCount").textContent=`Photo ${i+1} of ${car.children.length} · swipe for more`},{passive:true})}
+
+// ---------- your own photos ----------
+// shrink a picked image to max 1400 px JPEG so uploads stay small on mobile data
+function shrink(file){return new Promise(res=>{const u=URL.createObjectURL(file),im=new Image();
+ im.onload=()=>{const k=Math.min(1,1400/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement("canvas");c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);
+  c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>res(b||file),"image/jpeg",.8)};
+ im.onerror=()=>{URL.revokeObjectURL(u);res(file)};im.src=u})}
+$("#sheetBody").addEventListener("change",async e=>{if(e.target.id!=="phFile"||!cur||!assets||!db)return;const files=[...e.target.files];if(!files.length)return;
+ const id=cur._id,msg=$("#phMsg"),added=[];e.target.disabled=true;
+ for(let i=0;i<files.length;i++){msg.textContent=`Uploading ${i+1} of ${files.length}…`;
+  try{const r=await assets.upload(await shrink(files[i]),{type:"image/jpeg"});added.push(r.id)}catch(err){toast(err.code==="too_large"?"That photo is too big":"Couldn't upload: "+(err.code||err.message))}}
+ if(added.length){try{const l=listings.find(x=>x._id===id)||cur;await db.doc("listings/"+id).update({userPhotos:[...(l.userPhotos||[]),...added]});toast(added.length+" photo"+(added.length>1?"s":"")+" added")}
+  catch(err){toast("Couldn't save: "+(err.code||err.message))}}
+ msg.textContent="";e.target.disabled=false;e.target.value=""});
+$("#sheetBody").addEventListener("click",async e=>{const b=e.target.closest("[data-rmph]");if(!b||!cur||!db)return;
+ if(b.dataset.sure!=="1"){b.dataset.sure="1";b.textContent="Tap again";return}
+ const pid=b.dataset.rmph,l=listings.find(x=>x._id===cur._id)||cur;b.disabled=true;
+ try{await db.doc("listings/"+l._id).update({userPhotos:(l.userPhotos||[]).filter(x=>x!==pid)});try{await assets?.delete(pid)}catch(_){}toast("Photo removed")}catch(err){toast("Couldn't remove: "+(err.code||err.message));b.disabled=false}});
+
+// ---------- photo status (Settings) ----------
+function renderPhotoCfg(){const p=photoCfg,ok=p?.workingDomains||[],bad=p?.blockedDomains||[];
+ const nMine=listings.filter(l=>(l.userPhotos||[]).length).length,nAgent=listings.filter(l=>(l.photos||[]).length).length;
+ $("#phStatus").innerHTML=!p?"The next sweep will test which photo sites the agent can reach.":
+  `${ok.length?`The agent can copy photos from <b>${ok.length}</b> site${ok.length>1?"s":""}.`:"The agent <b>can't copy photos</b> from any property site yet: the sites below are blocked by your organisation's network settings for Claude."} ${p.testedAt?"Last tested "+esc(since(p.testedAt))+".":""}${p.retestNow?" <b>Will test again on the next sweep.</b>":""} Photos in the app: ${nAgent} copied by the agent, ${nMine} match${nMine===1?"":"es"} with photos you added.`;
+ $("#phDomains").innerHTML=ok.map(d=>`<span class="ok">✓ ${esc(d)}</span>`).join("")+bad.map(d=>`<span>${esc(d)}</span>`).join("")}
+$("#phCopy").onclick=async()=>{const list=(photoCfg?.blockedDomains||[]).join("\n");try{await navigator.clipboard.writeText(list);toast("List copied")}catch(e){toast("Press and hold a domain to copy it")}};
+$("#phRetest").onclick=async()=>{if(!db)return;try{await db.doc("config/photos").set({...(photoCfg||{}),retestNow:true});toast("The next sweep will test again")}catch(err){toast("Couldn't save: "+(err.code||err.message))}};
+
+// ---------- agency directory ----------
+function renderAgencies(){const L=agencyDir?.list||[];const c={yes:0,likely:0,unverified:0,no:0};L.forEach(a=>c[a.live]=(c[a.live]||0)+1);
+ $("#agCount").textContent=L.length+" found";$("#agSummary").textContent=L.length?`${L.length} agencies and classified sites found online: ${c.yes} confirmed live, ${c.likely} probably live, ${c.unverified||0} not verified, ${c.no} offline (skipped). The agent works through these in rotation.`:"The directory loads here once it's saved.";
+ const q=nrm($("#agQ").value),r=$("#agR").value,s=$("#agL").value;
+ const rows=L.filter(a=>(!q||nrm(a.name+" "+a.town).includes(q))&&(!r||String(a.region||"").includes(r))&&(!s||a.live===s));
+ const lab={yes:"Live",likely:"Probably live",unverified:"Not verified",no:"Offline"};
+ $("#agList").innerHTML=rows.slice(0,60).map(a=>{const wa=(a.whatsapp||"").replace(/[^\d]/g,"");const site=a.website||a.social;
+  return `<div class="agrow"><div class="row spread"><span class="nm">${esc(a.name)}</span><span class="pill ${a.live==="yes"?"src":""}">${esc(lab[a.live]||a.live||"")}</span></div><span class="note">${esc([a.town,a.region,a.type==="classifieds"?"Classifieds":null].filter(Boolean).join(" · "))}</span>${site?`<a href="${esc(/^https?:/.test(site)?site:"https://"+site)}" target="_blank" rel="noopener">${esc(site.replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,""))}</a>`:""}<span class="row" style="gap:10px">${wa?`<a href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp ${esc(a.whatsapp)}</a>`:""}${a.phone?`<span class="mono" style="user-select:all">${esc(a.phone)}</span>`:""}${a.email?`<span class="mono" style="user-select:all">${esc(a.email)}</span>`:""}</span></div>`}).join("")+(rows.length>60?`<p class="note">Showing 60 of ${rows.length}. Search to narrow the list.</p>`:"")}
+["#agQ","#agR","#agL"].forEach(s=>$(s).addEventListener("input",renderAgencies));
+
+// ---------- local copy for instant loading ----------
+function cacheSave(){try{localStorage.setItem("scoutCache",JSON.stringify({listings,searches,settings,fx,fees,runs:runs.slice(0,20)}))}catch(e){}}
+try{const c=JSON.parse(localStorage.getItem("scoutCache")||"null");if(c){listings=c.listings||[];searches=c.searches||[];settings=c.settings||null;fx=c.fx||null;fees=c.fees||fees;runs=c.runs||[]}}catch(e){}
+
+// ---------- activity ----------
+function renderRuns(){$("#runEmpty").hidden=!!runs.length;
+ $("#runRows").innerHTML=runs.map(r=>`<tr><td class="mono">${esc(new Date(r.at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))}</td><td>${esc(r.sourcesChecked??"")}</td><td>${esc(r.found??"")}</td><td>${r.newCount?`<b>${esc(r.newCount)}</b>`:"0"}</td><td>${esc(r.notes||"")}</td></tr>`).join("");
+ const last=runs[0];$("#status").innerHTML=`<span class="dot ${last?"":"off"}"></span><span>${last?"Last scan "+esc(ago(last.at)==="today"?new Date(last.at).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):ago(last.at)):"Waiting for first scan"}</span>`}
+
+// ---------- standalone extras ----------
+// some agency sites refuse to show their photos elsewhere: hide the broken picture instead of an icon
+document.addEventListener("error",e=>{const t=e.target;if(t&&t.tagName==="IMG"&&/^https?:/.test(t.src)&&!t.src.startsWith(location.origin)){t.style.visibility="hidden"}},true);
+function renderSrcStatus(st){if(!st||!st.hosts){return}const H=Object.entries(st.hosts).sort((a,b)=>a[0].localeCompare(b[0]));
+ $("#srcStatusNote").textContent=`From the scan at ${new Date(st.at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}. “Refused” means the website turned the scanner away; those can only be checked by hand.`;
+ $("#srcStatusRows").innerHTML=H.map(([h,v])=>`<tr><td>${esc(h)}</td><td>${v.ok}</td><td>${v.blocked?`<b>${v.blocked}</b>`:0}</td><td>${v.fail}</td><td>${esc(v.last||"")}</td></tr>`).join("")}
+$("#exportScanner").onclick=async()=>{const out={};for(const s of searches){const{_id,...x}=s;out[_id]=x}
+ const data=JSON.stringify({searches:out,settings:settings?Object.fromEntries(Object.entries(settings).filter(([k])=>k!=="_id")):null,savedAt:new Date().toISOString()},null,1);
+ if(!dl){toast("Saving files isn't available in this browser");return}
+ try{await dl.save({filename:"scanner-settings.json",data});toast("Saved scanner-settings.json")}catch(err){if(err.code!=="declined")toast("Couldn't save: "+(err.code||err.message))}};
+
+// ---------- boot ----------
+renderFees();renderFx();renderMatches();renderSearches();renderSettings();renderRuns();renderBudget();renderPhotoCfg();
+(async()=>{window.claude?.use?.("downloads").then(d=>{dl=d;if(!d){$("#exportCsv").disabled=true;$("#exportJson").disabled=true;$("#exportNote").textContent="Saving files isn't available in this browser."}});
+ db=await window.claude?.use?.("db");
+ if(!db){$("#status").innerHTML=`<span class="dot off"></span><span>${listings.length?"Showing your last saved copy. Couldn't load new data — check your connection.":"Couldn't load the data file. Open this page from its web address, not as a file."}</span>`;return}
+ const docs=s=>s.docs.map(d=>({...d.data(),_id:d.id}));
+ window.claude.use("assets").then(a=>{assets=a;if(cur&&!$("#sheet").hidden&&curTab==="photos")sheetTab("photos")}).catch(()=>{});
+ db.collection("listings").orderBy("firstSeen","desc").limit(500).onSnapshot(s=>{listings=docs(s);valCache.clear();renderMatches();renderPhotoCfg();cacheSave();
+  if(cur&&!$("#sheet").hidden){const n=listings.find(l=>l._id===cur._id);if(n){const changed=JSON.stringify(n.userPhotos||[])!==JSON.stringify(cur.userPhotos||[])||JSON.stringify(n.photos||[])!==JSON.stringify(cur.photos||[]);cur=n;if(changed&&curTab==="photos")sheetTab("photos")}}},e=>toast("Matches: "+e.code));
+ db.doc("config/photos").onSnapshot(d=>{photoCfg=d.exists?d.data():null;renderPhotoCfg()},e=>{});
+ db.collection("searches").onSnapshot(s=>{searches=docs(s);renderSearches();renderBudget();cacheSave()},e=>toast("Searches: "+e.code));
+ db.collection("runs").orderBy("at","desc").limit(60).onSnapshot(s=>{runs=docs(s);renderRuns()},e=>{});
+ db.doc("config/settings").onSnapshot(d=>{settings=d.exists?d.data():null;renderSettings();renderFx();renderMatches();cacheSave()},e=>{});
+ db.doc("config/fx").onSnapshot(d=>{if(d.exists){fx=d.data();renderFx();renderMatches();cacheSave()}},e=>{});
+ db.collection("comps").onSnapshot(s=>{comps=s.docs.map(d=>d.data());valCache.clear();renderMatches();if(cur&&!$("#sheet").hidden&&curTab==="value")sheetTab("value")},e=>{});
+ db.doc("market/references").onSnapshot(d=>{refs=d.exists?(d.data().items||[]):[]},e=>{});
+ db.doc("directory/agencies").onSnapshot(d=>{agencyDir=d.exists?d.data():null;renderAgencies()},e=>{});
+ db.doc("config/sourceStatus").onSnapshot(d=>{if(d.exists)renderSrcStatus(d.data())},e=>{});
+ db.doc("config/fees").onSnapshot(d=>{if(d.exists){fees={...fees,...d.data()};renderFees();calc("mur");renderMatches();cacheSave()}},e=>{});
+})();
+</script>
+
+</body></html>
