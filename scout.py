@@ -449,6 +449,10 @@ def send_alerts(items, cfg):
 # ---------------------------------------------------------------- main
 def main():
     cfg = yaml.safe_load(open(CFG_PATH, encoding="utf-8"))
+    if not os.path.exists(DB_PATH):
+        log("STOPPED: the data file docs/data/db.json is missing from the repository.")
+        log("Upload the 'docs' folder from the zip (it contains data/db.json), then run again.")
+        sys.exit(1)
     db = load_json(DB_PATH, {"collections": {}})
     C = db.setdefault("collections", {})
     for k in ("listings", "searches", "config", "comps", "runs", "market", "directory"):
@@ -629,6 +633,7 @@ def main():
     if DRY:
         log("dry run - nothing saved")
     else:
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
         tmp = DB_PATH + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(db, f, ensure_ascii=False, sort_keys=True, indent=1)
