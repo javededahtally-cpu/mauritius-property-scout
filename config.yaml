@@ -1,0 +1,85 @@
+# Mauritius Property Scout - scanner settings
+# Your searches (budget, types, areas) are taken from the app's data file
+# (docs/data/db.json). This file only says WHERE to look and how politely.
+
+alerts:
+  # Leave blank here - on GitHub these come from the repository "secrets".
+  # Only fill them in if you run the scanner on your own PC (Option B).
+  ntfy_topic: ""
+  app_url: ""          # e.g. https://yourname.github.io/mauritius-property-scout/
+
+limits:
+  delay_seconds: 2         # pause between two visits to the same website
+  new_adverts_per_run: 220 # adverts read per run
+  rechecks_per_day: 30     # existing matches re-checked for price cuts each day
+  agencies_per_run: 12     # agency websites (from the app's directory) per run, in rotation
+
+# Each source: list pages to read ({page} = page number) and a pattern that
+# recognises links to individual adverts. Set enabled: false to switch one off.
+sources:
+  - name: propertycloud.mu
+    key: propertycloud
+    pages: 3
+    lists:
+      - https://www.propertycloud.mu/for-sale/villas?page={page}
+      - https://www.propertycloud.mu/for-sale/houses?page={page}
+      - https://www.propertycloud.mu/for-sale/townhouses-duplexes?page={page}
+      - https://www.propertycloud.mu/for-sale/apartments?page={page}
+      - https://www.propertycloud.mu/for-sale/penthouses?page={page}
+      - https://www.propertycloud.mu/for-sale/residential-land?page={page}
+      - https://www.propertycloud.mu/for-sale/agricultural-land?page={page}
+    link: 'propertycloud\.mu/for-sale/[a-z-]+-[a-z0-9]*\d{5,}$'
+
+  - name: propertymap.mu
+    key: propertymap
+    pages: 3
+    lists:
+      - https://www.propertymap.mu/buy-property?page={page}
+    link: 'propertymap\.mu/buy-property/details/\d+/'
+
+  - name: L'Express Property
+    key: lexpress
+    pages: 2
+    lists:
+      - https://www.lexpressproperty.com/en/buy-mauritius/?page={page}
+    link: 'lexpressproperty\.com/en/buy-mauritius/[a-z_0-9]+-\d+'
+
+  - name: L'Express petites annonces
+    key: lexpress
+    pages: 2
+    lists:
+      - https://lexpress-petites-annonces.mu/c/immobiliers?page={page}
+    link: 'lexpress-petites-annonces\.mu/.+\d{6,}'
+
+  - name: expat.com
+    key: expat
+    pages: 1
+    lists:
+      - https://www.expat.com/en/housing/africa/mauritius/houses-for-sale.html
+      - https://www.expat.com/en/housing/africa/mauritius/houses-for-sale_2.html
+      - https://www.expat.com/en/housing/africa/mauritius/flats-for-sale.html
+      - https://www.expat.com/en/housing/africa/mauritius/flats-for-sale_2.html
+      - https://www.expat.com/en/housing/africa/mauritius/land-for-sale.html
+      - https://www.expat.com/en/housing/africa/mauritius/land-for-sale_2.html
+    link: 'expat\.com/en/housing/africa/mauritius/\d+-[a-z-]+/\d+-.+\.html'
+
+  - name: zafer.mu
+    key: zafer
+    pages: 1
+    lists:
+      - https://zafer.mu/
+    link: 'zafer\.mu/annonce/[0-9a-f-]{36}'
+
+  - name: astervender.mu
+    key: astervender
+    pages: 1
+    lists:
+      - https://www.astervender.mu/Real-Estate
+    link: 'astervender\.mu/Real-Estate/.+-\d{4,}$'
+
+  - name: noukaz.mu
+    key: noukaz
+    pages: 1
+    lists:
+      - https://noukaz.mu/
+    link: 'noukaz\.mu/.*\d{3,}'

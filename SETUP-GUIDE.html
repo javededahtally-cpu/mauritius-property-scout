@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Property Scout – setup on your PC and iPhone</title>
+<style>
+:root{--bg:#F3F7F6;--card:#fff;--ink:#0F2220;--muted:#557370;--line:#D2DEDB;--pc:#0B6F6A;--pc-soft:#D6EDEA;--ph:#7A3FB0;--ph-soft:#EEE3F8;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0C1716;--card:#13211F;--ink:#E4F0EE;--muted:#8FAEAA;--line:#24403C;--pc:#3FBDB4;--pc-soft:#163A37;--ph:#C59BEB;--ph-soft:#2E1F3D;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Segoe UI",system-ui,-apple-system,sans-serif}
+main{max-width:760px;margin:0 auto;padding:28px 18px 60px}
+h1{font-size:1.9rem;line-height:1.15;margin:0 0 6px}h2{font-size:1.2rem;margin:34px 0 10px}
+p.lead{color:var(--muted);margin:0 0 18px}
+ol.steps{list-style:none;padding:0;margin:0;counter-reset:s}
+ol.steps>li{counter-increment:s;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px 12px 58px;margin:0 0 10px;position:relative}
+ol.steps>li::before{content:counter(s);position:absolute;left:16px;top:14px;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--bg);font-weight:700;display:grid;place-items:center;font-size:.9rem}
+.dev{display:inline-block;font-size:.8rem;font-weight:700;border-radius:6px;padding:1px 8px;margin-right:6px;vertical-align:1px}
+.pc{background:var(--pc-soft);color:var(--pc)}.phone{background:var(--ph-soft);color:var(--ph)}
+b.t{display:block;margin-bottom:4px}
+code,kbd{font-family:Consolas,ui-monospace,monospace;background:var(--pc-soft);border-radius:4px;padding:0 5px;font-size:.92em}
+ul{margin:6px 0 4px;padding-left:20px}.note{color:var(--muted);font-size:.93rem}
+table{border-collapse:collapse;width:100%;background:var(--card);border-radius:10px;overflow:hidden}td,th{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+</style></head><body><main>
+<h1>Property Scout: set it up on your PC and iPhone</h1>
+<p class="lead">About 30 minutes, once. Afterwards the scan runs every hour on GitHub’s free servers, even when your PC is off. Nothing uses Claude or costs anything.</p>
+<p><span class="dev pc">PC</span> = do this on your Windows laptop &nbsp; <span class="dev phone">iPhone</span> = do this on your iPhone</p>
+
+<h2>Set up GitHub</h2>
+<ol class="steps">
+<li><span class="dev pc">PC</span><b class="t">Unzip the package</b>Find <code>mauritius-property-scout.zip</code> in Downloads, right-click it → <b>Extract All</b> → Extract. You get a folder <code>mauritius-property-scout</code> containing <code>.github</code>, <code>docs</code>, <code>scout.py</code> and a few other files.</li>
+<li><span class="dev pc">PC</span><b class="t">Create a free GitHub account</b>Go to <b>github.com/signup</b> and follow the steps (email, password, username). Your username becomes part of your app’s address.</li>
+<li><span class="dev pc">PC</span><b class="t">Create the repository</b>Click <b>+</b> (top right) → <b>New repository</b>. Name: <code>mauritius-property-scout</code>. Choose <b>Public</b>. Click <b>Create repository</b>.
+<p class="note">Public is what makes the hourly runs and the app hosting free. Your matches will be viewable by anyone who finds the address; your passwords stay hidden (step 7).</p></li>
+<li><span class="dev pc">PC</span><b class="t">Upload the files</b>On the new repository page, click the link <b>uploading an existing file</b>. Open the unzipped <code>mauritius-property-scout</code> folder in File Explorer, press <kbd>Ctrl</kbd>+<kbd>A</kbd> to select everything inside it, and drag it all onto the browser page. When the upload finishes, click <b>Commit changes</b>.
+<p class="note">Check that <code>.github</code> appears in the file list afterwards. If it doesn’t: <b>Add file → Create new file</b>, type the name <code>.github/workflows/scout.yml</code>, paste in the contents of the separate <code>scout.yml</code> file, and commit.</p></li>
+<li><span class="dev pc">PC</span><b class="t">Let the scanner save its results</b>In the repository: <b>Settings → Actions → General</b>. Scroll to <b>Workflow permissions</b>, choose <b>Read and write permissions</b>, click <b>Save</b>.</li>
+</ol>
+
+<h2>Phone alerts</h2>
+<ol class="steps" start="6" style="counter-reset:s 5">
+<li><span class="dev phone">iPhone</span><b class="t">Install ntfy and pick a topic</b>Install <b>ntfy</b> from the App Store (free). Open it, tap <b>+</b>, type a topic name only you would guess, for example <code>mps-jay-7k3q9</code>, tap <b>Subscribe</b>, and allow notifications. Write the topic name down exactly.</li>
+<li><span class="dev pc">PC</span><b class="t">Give GitHub your alert details</b>In the repository: <b>Settings → Secrets and variables → Actions → New repository secret</b>. Add:
+<table><tr><th>Name</th><th>Value</th></tr>
+<tr><td><code>NTFY_TOPIC</code></td><td>your ntfy topic name from step 6</td></tr>
+<tr><td><code>EMAIL_TO</code></td><td>optional: where emails go (e.g. your Hotmail address)</td></tr>
+<tr><td><code>SMTP_USER</code></td><td>optional: a <b>Gmail</b> address to send from</td></tr>
+<tr><td><code>SMTP_PASSWORD</code></td><td>optional: that Gmail account’s 16-letter app password</td></tr></table>
+<p class="note">Email is optional; the iPhone push is enough. Sending needs a Gmail account (Hotmail can receive but not send for this). To get a Gmail app password: Google Account → Security → turn on 2-Step Verification → search “App passwords” → create one.</p></li>
+</ol>
+
+<h2>Turn it on</h2>
+<ol class="steps" start="8" style="counter-reset:s 7">
+<li><span class="dev pc">PC</span><b class="t">Switch on the app’s web address</b><b>Settings → Pages</b>. Source: <b>Deploy from a branch</b>. Branch: <b>main</b>, folder <b>/docs</b> → <b>Save</b>. After 1–2 minutes the page shows your address: <code>https://YOUR-USERNAME.github.io/mauritius-property-scout/</code></li>
+<li><span class="dev pc">PC</span><b class="t">Run the first scan</b>Open the <b>Actions</b> tab (click the green button to enable workflows if asked) → <b>Property Scout scan</b> → <b>Run workflow</b> → <b>Run workflow</b>. It takes 5–15 minutes; a green tick means it worked. Your iPhone gets up to 10 alerts for the best new finds.</li>
+<li><span class="dev pc">PC</span><b class="t">Install the app on your laptop</b>Open your app address in <b>Edge</b> → <b>⋯</b> menu → <b>Apps → Install this site as an app</b>. (Chrome: ⋮ → <b>Cast, save and share → Install page as app</b>.) It appears in the Start menu; right-click it there to pin it to the taskbar.</li>
+<li><span class="dev phone">iPhone</span><b class="t">Put the app on your home screen</b>Open your app address in <b>Safari</b> (easiest: email or text it to yourself from the PC). Tap <b>Share</b> → <b>Add to Home Screen</b> → <b>Add</b>.</li>
+<li><span class="dev pc">PC</span><b class="t">Check which sites the scanner can read</b>In the app: <b>Activity → Which websites the scanner can read</b>. “Refused” means a site turns automated visitors away. Some (L’Express Property especially) may do so.</li>
+</ol>
+
+<h2>Stop the Claude version</h2>
+<ol class="steps" start="13" style="counter-reset:s 12">
+<li><span class="dev pc">PC</span><b class="t">Delete the Claude scheduled task</b>Once matches appear in the new app, open Claude, find the scheduled task <b>Mauritius Property Scout sweep</b>, and pause or delete it. That task is what used credits; the new app never touches Claude.</li>
+</ol>
+
+<h2>Day to day</h2>
+<ul>
+<li><b>New matches</b> appear on both devices automatically every hour.</li>
+<li><b>Your own changes</b> (shortlist, rejects, photos you add) stay on the device where you made them.</li>
+<li><b>To change what the scanner looks for</b>: edit in <b>My searches</b> or <b>Settings</b>, then tap <b>Download for the scanner</b> <span class="dev pc">PC</span>, and in GitHub use <b>Add file → Upload files</b> to upload <code>scanner-settings.json</code> → <b>Commit changes</b>.</li>
+<li>If GitHub ever emails that the scheduled workflow was disabled, open the Actions tab and click <b>Enable workflow</b>.</li>
+</ul>
+<p class="note">Optional alternative: <code>run_windows.bat</code> runs one scan on your PC and opens the app at <code>http://localhost:8765</code>; <code>schedule_windows.bat</code> makes the PC scan every hour while it’s on (needs Python from python.org). This version isn’t visible on the iPhone.</p>
+</main></body></html>
